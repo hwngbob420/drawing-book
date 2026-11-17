@@ -1,0 +1,237 @@
+# Drawing guide — line-art rules & hard-won gotchas
+
+## These rules are now CODE
+Every numeric rule below is enforced by `lib/validate.py` (`python3 -m lib.validate
+pages/*.svg`): border clearance, scene extent (sky tokens and lone thin strokes
+excluded), mass distribution (hollow middle band — the three-layer recipe below, as
+arithmetic), figure/face size, caption-band + title-zone, text width, head
+kill-radius, hand/arm overlap, wheel tangency, parallel-line sliver floor,
+mat-swallowing (full erasure; partial halo nibbles still need tile eyes), duplicate
+pages. The prose stays for UNDERSTANDING the why — do not hand-audit what
+`lib.validate` already measures. Pages that are intentionally sparse take
+`spage(..., layout="activity")`, `"vignette"` or `"creative"`.
+
+## Age-band tuning
+| Age | main stroke | elements/page | notes |
+|---|---|---|---|
+| 3-4 | SW=5-6 | 5-10 | big shapes, subject fills 40-60% of page, minimal background |
+| 5-6 | SW=4-5 | 8-14 | simple patterns/expressions OK, moderate backgrounds |
+| 6-7 | SW=4 | 10-20 | small details (freckles, seeds, shingles) fine |
+charlib default SW=5 suits the 3-6 middle. Detail strokes 2.5-3.5.
+
+## Collision gotchas (every one of these bit us in production)
+1. **Heads are drawn LAST** in figure helpers with white fill — any raised hand, prop, or
+   line within ~1.3*r of the head center gets silently covered. Keep grip-hands and props
+   offset well outside the hair silhouette (hands at |x| ≥ 1.5*r from head center).
+   **Wide hairstyles are worse**: pigtails reach |x|≈1.7*r and long_wavy ≈1.45*r, which
+   swallows the stock `wave`/`up` hand circles (hidden hands / "third pigtail puff"
+   reads). For pigtails or long_wavy characters use `kid_stand` poses
+   `wave_high`/`cheer`, whose hands sit outside every hair silhouette.
+2. **Never mirror with a negative uniform scale** (`G(..., scale=-1)` renders upside-down).
+   Use `GM()` (flips x only).
+3. **Hand circles must overlap their arm-line ends** — a 2px gap reads as a floating bubble.
+4. **Ropes/webs/leashes must end AT the hand circle** — compute the global position:
+   `global = (figure_x + local_x*scale, figure_y + local_y*scale)`.
+5. **Adjacent rectangles (windows) must not overlap** — overlapping strokes render as solid
+   black slabs. Keep ≥4px gaps.
+6. **Text in burst stars**: font-size ≤ 0.4 × star radius or it overflows the points.
+6b. **Text in any banner/box**: page text is Andika glyph paths, so its width is EXACT —
+   `charlib.text_width(s, size)` (or `word_width()` for `word()`/`banner()`); no
+   per-character estimate needed (the old DejaVu ≈ 0.55 × size/char, bold ≈ 0.62 rule only
+   applies to legacy `TEXT_MODE="font"` output). Container width must be ≥ text width +
+   2×18px padding — compute it, don't eyeball it.
+6c. **Text in organic shapes (hearts, bursts, clouds)**: measure the shape's interior
+   width AT THE TEXT'S y, not its widest point — a heart narrows fast above and below
+   its lobes. Proven combo for back covers: heart s≈210 with "The End!" at ≤52px bold.
+6d. **Captions must wrap.** A 15-25-word story caption on ONE line overflows the border
+   (this bit two of six benchmark models). `charlib.page()`/`spage()` wrap captions
+   automatically on MEASURED width (~670px); if you render caption text yourself, use
+   `charlib.wrap_width(text, max_w, size)`.
+7. Background objects (sun, clouds, bunting) collide with tower/flag/head tops — check the
+   sky lane before placing. Sun rays extend r+32 beyond the disc.
+8. Anchor everything to a ground line or tuft — floating animals/objects get flagged by kids
+   and reviewers alike. Two short paired marks read as "eyes" on buildings — offset vents.
+9. Standing figures: feet origin y=0; place with G(x, ground_y, ...). Caption band is below
+   y≈1000 — keep art above it.
+10. Keep every element ≥12px inside the border rect (x 28-822, y 28-1072).
+
+## Tangent lines & figure-ground illusions
+When a background contour (rug, path, fence rail, furniture edge) passes tangent to or
+touches a foreground contour (a leg, a dress hem), the shapes visually fuse and confuse.
+Two defenses, use both:
+1. **Wrap every foreground figure/object in `matted(inner, pad=9)`** after drawing the
+   background — it knocks a white halo out of everything behind the figure, so tangency
+   is impossible by construction. Draw order: ground/rug → furniture (matted if over rug)
+   → figures (matted).
+2. Even with matting, don't run a closed background shape (full rug ellipse) through a
+   crowd — prefer partial arcs behind groups, and keep ≥14px designed clearance between
+   unrelated contours.
+3. **Contact lines are not background.** A `matted()` halo also knocks out the ground
+   line under paws and dress hems, dashing it. Draw the ground line (or a short contact
+   segment) AFTER the matted figures — the r3 benchmark found the bundled example had
+   this artifact on every page.
+4. **Dense matted clusters (3+ overlapping matted objects) can swallow a neighbor** —
+   a later object's white halo can fully erase an earlier small one (a dog's mat ate a
+   dirt mound; another run's dog mat ate half an excavator). Draw a tight cluster as ONE
+   `matted()` group, or keep ~2x-pad clearance between separately-matted objects. Verify
+   with `render_tiles()` crops — full-page thumbnails hide mat-swallowing.
+
+## Friendly faces (anti-eerie rules)
+The eerie combo is: eyebrows close above dot eyes (reads scheming) + a wide flat smile
+arc (reads smirk). charlib `face()` defaults now encode the fixes — keep them:
+- **No eyebrows by default** (`brows=False`). If used, they sit HIGH above the eyes.
+- Smile is a **narrow deep U** (width ≤ 0.48*r), never a wide flat arc.
+- `mouth="open"` (closed D-shape) for celebration pages — unambiguously joyful.
+- Small open **cheek circles** (colorable blush) add warmth; auto-suppressed with freckles.
+
+## Everyday objects — use the cookbook, don't freehand
+For any real-world object (vehicles, houses, trees, animals, playground gear),
+call a `charlib` helper if one exists (`car_side`, `bicycle`, `tractor`,
+`train_engine`, `pickup_truck`, `house`, `tree_round`, `tree_pine`, `horse`,
+`bird_side`, `swing_set`, ...); otherwise follow the relative-proportion recipes
+in `reference/shape-cookbook.md`. Never guess raw coordinates for object geometry —
+that is exactly where line-art goes wrong (floating wheels, unequal bike wheels,
+roofs that don't overhang). Side-profile objects face right; mirror with `GM()`.
+To stage two side-view figures face-to-face (kid meets goat, dogs nose-to-nose):
+keep the LEFT one stock (it faces right) and `GM()` the RIGHT one — otherwise both
+face the same way and the interaction reads rump-first.
+
+## Composition
+- **Numeric layout check (run it, don't eyeball)**: the scene (non-sky ink) spans
+  ≥330px — about one foreground figure — and reaches down to y≥900 (HIGH below 330px
+  or above y880); the middle band y430-715 holds ≥40% of the heavier outer band's ink
+  (MED); every element ≥12px inside the border; main figures ≥180px tall; faces r≥28
+  or trait features crowd. Every model bottom-crams first drafts — plan the vertical
+  layout BEFORE drawing (see reference/model-tiers.md).
+- **The span is a FLOOR, not the goal — and sky tokens don't count.** A corner sun +
+  a high cloud used to make the bbox arithmetic pass while the page still read
+  unfinished (three of six benchmark models did exactly this, one knowingly). Every
+  part of sun/moon/cloud/sparkle/star_field is tagged `data-sky` (wrap your own sky
+  decoration in `charlib.sky()`), and rows carrying a lone thin stroke (pole, kite
+  string) don't extend the span. Add a midground anchor (tree, building, hill) whose
+  top reaches y≈450-550, don't sprinkle sky.
+- Whole-page layout: title y≈100, scene y≈150-950, caption y≈1038, page number bottom.
+- Fill the middle band — a fence at the top and kids at the bottom with 300px of empty
+  space between reads as unfinished; add a barn/tree/path/mid-ground element.
+- Even icon distribution on cover/back; balance sparkle density left/right.
+- Name labels under figures (24px, weight normal) on the intro page help parents.
+
+## Print
+- `build()` renders letter-size vector PDF (612x792pt) — never rasterize pages.
+- One page per builder function; BUILDERS list + argv substring filter = partial rebuilds.
+
+## Custom poses (strong tier only)
+- Build from the PUBLIC parts, never by re-implementing the figure: `kid_top(t)` gives
+  head + torso + legs at the feet origin with `(parts, shoulders, head_y)`; add
+  `arm(shoulder, wrist)` / `limb(...)` for each arm and draw the head last.
+- A pose you KNOW is "kneeling" read as "a girl in a poofy dress" to three sets of blind
+  raters; the frontal "diamond" squat (knees above hips, shins angled in) read correctly.
+  Test every custom pose with the blind-rater protocol in `model-tiers.md`; if it fails,
+  change the pose TYPE, don't iterate the same one.
+- Pointy ears on a tilted dog head read as horns (one ear) or a cat (two spread ears);
+  keep a tucked pair and ≤22° tilt. Paired marks on a dirt pile read as a face.
+
+## Costumes, facial accessories & props on figures (lessons from user pushback)
+- **Never stroke across the face interior.** An accessory edge crossing the face gets
+  read AS a facial feature (a beard's inner arc reads as a giant grin no matter how
+  small the real mouth is). Beards hang UNDER the jaw (see charlib `face(beard=True)`);
+  glasses/masks are the only sanctioned face-crossing shapes.
+- **One silhouette + at most two accents per costume overlay.** A bib apron = one
+  outline + waist line + one low pocket. Stacking strap + bib + bow + pocket + tool on
+  a small chest reads as clutter every time.
+- **Props must match their iconic silhouette** (a chef toque = straight band + mushroom
+  puff overhanging it; wider than tall). If a prop needs a caption to identify it, redraw it.
+- **Face clearance is numeric:** no prop/held-item center within 1.3×r of any face
+  center (a gift held "up" drifts onto the face — the caption said hand, the render said face).
+
+## Foliage & structures in trees
+- Big canopies need TEXTURE: a scalloped foliage outline + at most two inner leaf marks.
+  Bare overlapping circles read as balloons. Keep inner marks ASYMMETRIC — two marks at
+  the same height read as a pair of eyes, and three marks in a triangle (two high, one
+  centred below) read as a face: `tree_round`'s old four caret ticks put a sleeping face
+  on every default tree. One mark per height band, on a diagonal, and look at the
+  thumbnail — if you can see a face, it is not fixed.
+- A structure in a tree sits BELOW/BESIDE the foliage with visible support (fork of
+  branches, platform planks) — a house floating inside a leaf blob drowns.
+- Ladders/ropes attach beside the trunk, never overlapping it (rails over the trunk
+  crowd out its silhouette).
+
+## Three-layer composition recipe (default for scene pages)
+1. BACKGROUND: scene kit (ground line, hills/skyline, sky) — kits take
+   `variant=N` for deterministic layout variety and `midground=True`
+   (default) for depth anchors.
+2. MIDGROUND: kit anchors sit at y≈750-930 at reduced size (further away).
+   They add depth but do NOT fill the middle band — add one anchor of your
+   own (tree/house/furniture) whose top reaches y≈450-550.
+3. FOREGROUND: main figures ~300-380px tall (kid_stand scale 1.2-1.5;
+   1.3 ≈ 326px ≈ 30% of the page) standing ON the declared ground line.
+   Scale 1.0 (~250px) reads as a distant figure — bump it or add midground
+   so the page doesn't read bottom-empty.
+
+The validator measures this recipe with two checks, one owner per failure.
+`scene_span` owns the EXTENT: a kit + one 1.0 kid is a 246px strip → HIGH
+(floor 330px); the recipe (tree whose top reaches y≈500 + kid at 1.3) spans
+444px. `mass_distribution` owns WHERE the ink sits: non-sky coverage in three
+equal bands between the title (y145) and caption (y1000), MED **hollow middle**
+when the middle band (y430-715) holds < 40% of the heavier outer band's ink —
+the hourglass that clears the extent with props up top and a figure strip on
+the ground (~1% middle vs ~27% bottom). The recipe scores ~40% vs ~44%. A big
+figure alone does not fill the middle (kid at 1.4 on a bare kit: 8% vs 31%) —
+the midground anchor does. Numbers are in `validate_svg(...)["span"]`/`["mass"]`
+and printed by the CLI.
+
+Rotate `variant` between pages of the same setting so spreads don't repeat
+a layout; keep one variant per scene across a single book for coherence.
+
+## Vision-reviewed composition lessons (2026-08)
+- Scene-kit suns/clouds sit at y>=215: sky tokens at title height collide
+  with page titles (was a real defect in scene_meadow/street/beach/farm).
+- Speech bubbles with tail="down" need ~200px clearance above a standing
+  1.0-scale kid's head (bubble + tail vs head top at feet_y-196).
+- Thought bubbles trail from BESIDE the speaker's head, not over the back.
+- Traced-photo fragments draw BEFORE foreground figures (their white
+  silhouette fill otherwise covers a neighbouring kid's waving hand);
+  composite_page + manual G() placement: trace first, characters after.
+- kids_holding_hands separates partners by 48.5*s (pigtails reach 1.32r
+  and graze the partner's 1.3r face zone at 44*s).
+- Mat a foreground figure when a background line would run TANGENT to it.
+  When it only CROSSES lines (a cow's thin legs across a hill or ground
+  line), the halo chops those lines into dashes around each leg — stand it
+  a step in front of the ground line (y = ground + 20..30) instead, and keep
+  fence posts out from between animal legs (they read as extra legs:
+  `scene_farm(fence=False)`).
+- Size catalog/inventory grids by MEASURING: `fit_fragment(frag, cx, cy,
+  w, h, anchor="bottom")` scales any helper into its cell at page stroke
+  weight (`fragment_bbox` gives the tight box). Three columns, not four, on
+  a letter page — at ~150px wide animal legs/ears drop under the 3x3mm floor.
+- G()/GM() scales are precision-formatted: rounding 0.95 to one decimal
+  silently changed figure sizes (and rounded a 0.044 glyph scale to 0.0,
+  vaporizing banner text — the _f() vs _fs() split exists for this).
+
+## Publisher-grade craft (researched 2026-07, sources in repo history)
+- **Two-tier line hierarchy**: outer/silhouette contours 1.3-2.0x the interior detail
+  stroke (e.g. outer 5-6 / interior 4 for ages 3-5; outer 4 / interior 3 for 5-7).
+  The weight contrast is what tells a child "boundary" vs "detail".
+- **Split the age band**: 3-5 → stroke 4-6, ~6-10 elements, subject 40-60% of page;
+  5-7 → stroke 3-4, ~12-16 elements, full scenes with subjects 30-50% each.
+- **Region floor**: no enclosed area a child would try to color smaller than ~3x3mm
+  at print size (a crayon tip is 2-4mm). Slivers frustrate; verify with
+  `charlib.qa_page(svg)` — it labels enclosed regions and counts slivers, plus
+  asserts minimum stroke ≥0.5pt print safety (ours run 1.4-1.8pt).
+- **Parallel-line gap floor**: two near-parallel lines closer than ~3-4mm create an
+  uncolorable sliver — the matting system prevents touching, not close-passing.
+- **Density pacing**: alternate calm and busy pages across the book (element count
+  above/below the book's mean); never 3+ consecutive busy pages.
+- **One focal subject per page**; background elements are skippable context — the
+  page must read "finished" if a kid colors only the subject.
+
+## Print-on-demand (if the book will be printed/bound commercially)
+- Trim 8.5x11 (8.5x8.5 square trending for youngest band). Bleed 0.125" only when
+  art touches the edge. Outer margin 0.5" (professional standard, not the 0.375 legal
+  minimum). Spine-side: keep identity-critical art (faces, hands, text) 0.6-0.75"
+  from the gutter — bound pages curve.
+- 300+ DPI equivalent, grayscale, flattened single PDF. Page count = multiple of 4.
+- Single-sided layout convention (markers bleed through); title page recto +
+  copyright verso is the standard minimum front matter.
+- Top review complaints to design against: thin lines, too-small regions, art near
+  the spine, theme-mismatched pages, duplicated pages.
