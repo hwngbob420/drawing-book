@@ -45,7 +45,7 @@ export class GalleryView {
     const workshop = h(
       'button',
       { class: 'card clay workshop', 'aria-label': 'Xưởng Phép Thuật — Tự Tạo Tranh' },
-      h('div', { class: 'w-art' }, icon('wand'), ...['n:1f984', 'n:1f996', 'n:1f415'].map((s) => h('img', { src: svgUrl(s), alt: '', draggable: 'false' }))),
+      h('div', { class: 'w-art' }, icon('wand'), ...['s:unicorn', 's:trex', 's:puppy'].map((s) => h('img', { src: svgUrl(s), alt: '', draggable: 'false' }))),
       h('div', { class: 'name' }, 'Xưởng Phép Thuật', h('small', {}, 'Tự tạo tranh')),
     );
     workshop.addEventListener('click', () => {
@@ -133,7 +133,7 @@ export class GalleryView {
         h('h3', {}, 'Dữ liệu'),
         wipe,
         h('button', { class: 'pbtn', onclick: () => this.closePanel() }, 'Đóng'),
-        h('p', { class: 'credits' }, 'Hình minh hoạ: Noto Emoji © Google (Apache 2.0). Icon và một số hình: OpenMoji (CC BY-SA 4.0), đã chỉnh sửa thành nét tô màu.'),
+        h('p', { class: 'credits' }, 'Hình minh hoạ: bộ nét sách tranh vẽ riêng cho ứng dụng. Icon giao diện: OpenMoji (CC BY-SA 4.0).'),
       ),
     );
     this.panel.hidden = false;

@@ -3,15 +3,18 @@
 // Kết quả: dist-single/magic-coloring-book.html — mở trực tiếp hoặc đưa lên bất kỳ host tĩnh nào.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'dist');
 const assets = fs.readdirSync(path.join(dist, 'assets'));
 const js = fs.readFileSync(path.join(dist, 'assets', assets.find((f) => f.endsWith('.js'))), 'utf8');
 const css = fs.readFileSync(path.join(dist, 'assets', assets.find((f) => f.endsWith('.css'))), 'utf8');
 
 const svgs = {};
-for (const [dir, prefix] of [['noto', 'n:'], ['openmoji', 'o:']]) {
+// chỉ nhúng bộ hình sách tranh — tranh mẫu và Xưởng Phép Thuật không còn dùng Noto/OpenMoji
+for (const [dir, prefix] of [['story', 's:']]) {
+  if (!fs.existsSync(path.join(root, 'public/svg', dir))) continue;
   for (const f of fs.readdirSync(path.join(root, 'public/svg', dir))) {
     svgs[prefix + f.replace('.svg', '')] = fs.readFileSync(path.join(root, 'public/svg', dir, f), 'utf8');
   }

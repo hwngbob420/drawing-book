@@ -4,10 +4,10 @@ import { AnimKind, AnimPart, ART_W, ART_H, makeCanvas, ctx2d } from '../types';
  * SceneComposer — Bộ Ghép Tranh Vector.
  *
  * Mỗi bức tranh là một danh sách lớp xếp từ sau ra trước; lớp là một hình SVG
- * (Noto Emoji / OpenMoji, đã trích sẵn vào `public/svg/`) hoặc một hàm vẽ nền
+ * (bộ hình sách tranh tự vẽ `public/svg/story/`, xem scripts/storybook) hoặc một hàm vẽ nền
  * đơn giản (đường đồi, mặt đất...). Với từng hình SVG, bộ ghép sẽ:
  *
- *  1. Chuẩn hoá: mọi mảng thành nền trắng #FFFFFF, viền đen #111111 dày đều,
+ *  1. Chuẩn hoá: mọi mảng thành nền trắng #FFFFFF, viền đen ấm #231F20 dày đều,
  *     đầu nét bo tròn; chỉ các chi tiết nhỏ vốn tối màu (mắt, mũi) giữ mực đặc.
  *  2. Raster hoá rồi đổi "độ tối" thành kênh alpha -> lớp nét mực trong suốt.
  *  3. Tìm bóng (silhouette) của hình bằng cách loang từ mép ngoài trên bản đồ
@@ -16,7 +16,7 @@ import { AnimKind, AnimPart, ART_W, ART_H, makeCanvas, ctx2d } from '../types';
  */
 
 export interface SceneItem {
-  /** 'n:<mã>' = Noto Emoji, 'o:<mã>' = OpenMoji black. */
+  /** 's:<tên>' = hình sách tranh tự vẽ (public/svg/story, sinh bởi scripts/storybook); 'n:' Noto / 'o:' OpenMoji vẫn đọc được. */
   s: string;
   x: number;
   y: number;
@@ -29,7 +29,10 @@ export interface SceneItem {
 }
 export type SceneLayer = SceneItem | ((p: Pen) => void);
 
-export const INK = '#111111';
+export const INK = '#231F20';
+const [INK_R, INK_G, INK_B] = [0x23, 0x1f, 0x20];
+/** 255 - độ sáng của INK: mực đặc nhất -> alpha 255 */
+const INK_SPAN = 255 - (INK_R * 0.3 + INK_G * 0.59 + INK_B * 0.11);
 type Pt = [number, number];
 const TAU = Math.PI * 2;
 
@@ -106,20 +109,18 @@ export class Pen {
     for (const p of paths) this.c.stroke(p);
     this.c.restore();
   }
+  /** Khóm cỏ: một mảng kín ba ngọn tròn (đủ to để tô, không đọc thành chữ/mũi tên). */
   grass(x: number, y: number, s = 1) {
-    this.line(
-      poly(
-        [
-          [x - 18 * s, y],
-          [x - 10 * s, y - 30 * s],
-          [x - 2 * s, y - 4 * s],
-          [x + 6 * s, y - 36 * s],
-          [x + 14 * s, y - 2 * s],
-          [x + 24 * s, y - 24 * s],
-        ],
-        false,
-      ),
-    );
+    const p = new Path2D();
+    p.moveTo(x - 34 * s, y);
+    p.quadraticCurveTo(x - 36 * s, y - 22 * s, x - 26 * s, y - 36 * s);
+    p.quadraticCurveTo(x - 16 * s, y - 20 * s, x - 10 * s, y - 24 * s);
+    p.quadraticCurveTo(x - 4 * s, y - 46 * s, x + 4 * s, y - 50 * s);
+    p.quadraticCurveTo(x + 10 * s, y - 28 * s, x + 14 * s, y - 24 * s);
+    p.quadraticCurveTo(x + 22 * s, y - 34 * s, x + 30 * s, y - 38 * s);
+    p.quadraticCurveTo(x + 36 * s, y - 20 * s, x + 34 * s, y);
+    p.closePath();
+    this.shape(p);
   }
 }
 
@@ -139,7 +140,7 @@ export function svgUrl(src: string): string {
     return u;
   }
   const [kind, code] = src.split(':');
-  return `${import.meta.env.BASE_URL}svg/${kind === 'n' ? 'noto' : 'openmoji'}/${code}.svg`;
+  return `${import.meta.env.BASE_URL}svg/${kind === 's' ? 'story' : kind === 'n' ? 'noto' : 'openmoji'}/${code}.svg`;
 }
 
 export function loadSvgText(src: string): Promise<string> {
@@ -177,7 +178,8 @@ export function normalizeSvg(text: string, src: string, size: number, strokePx: 
   const vb = (svg.getAttribute('viewBox') || '0 0 128 128').split(/[\s,]+/).map(Number);
   const unit = vb[2] || 128;
   const sw = ((strokePx * unit) / size).toFixed(2);
-  const openmoji = src.startsWith('o:');
+  const story = src.startsWith('s:');
+  const openmoji = src.startsWith('o:') || story; // fill tối = mực đặc (con ngươi, lỗ mũi)
 
   // Gắn tạm vào trang để đọc được màu thật (class, style, kế thừa) và khung bao
   const host = document.createElement('div');
@@ -205,8 +207,11 @@ export function normalizeSvg(text: string, src: string, size: number, strokePx: 
       plan.push([el, fill]);
     });
     for (const [el, fill] of plan) {
+      // Sách tranh: nét ngoài 3.5, nét chia mảng 2.5 -> giữ tỉ lệ so với nét ngoài
+      const ratio = story ? Math.max(0.2, (parseFloat(el.getAttribute('stroke-width') || '3.5') || 3.5) / 3.5) : 1;
+      const w = story ? (+sw * ratio).toFixed(2) : sw;
       if (fill === null) el.remove();
-      else el.setAttribute('style', `fill:${fill};stroke:${INK};stroke-width:${sw};stroke-linecap:round;stroke-linejoin:round;opacity:1;fill-opacity:1;stroke-opacity:1`);
+      else el.setAttribute('style', `fill:${fill};stroke:${INK};stroke-width:${w};stroke-linecap:round;stroke-linejoin:round;opacity:1;fill-opacity:1;stroke-opacity:1`);
     }
     svg.querySelectorAll<SVGElement>('g,[opacity]').forEach((g) => {
       g.removeAttribute('opacity');
@@ -255,10 +260,10 @@ async function rasterize(src: string, size: number): Promise<{ ink: HTMLCanvasEl
   const open = new Uint8Array(n);
   for (let i = 0; i < n; i++) {
     const lum = d[i * 4] * 0.3 + d[i * 4 + 1] * 0.59 + d[i * 4 + 2] * 0.11;
-    const a = Math.round((d[i * 4 + 3] * (255 - lum)) / 238);
-    d[i * 4] = 17;
-    d[i * 4 + 1] = 17;
-    d[i * 4 + 2] = 17;
+    const a = Math.round((d[i * 4 + 3] * (255 - lum)) / INK_SPAN);
+    d[i * 4] = INK_R;
+    d[i * 4 + 1] = INK_G;
+    d[i * 4 + 2] = INK_B;
     d[i * 4 + 3] = a > 255 ? 255 : a;
     open[i] = a < 110 ? 1 : 0;
   }
@@ -340,7 +345,72 @@ export async function composeScene(layers: SceneLayer[], w = ART_W, h = ART_H): 
     c.drawImage(r.ink, -half, -half);
     c.restore();
   });
+  canvas.dataset.sealed = String(sealTinyRegions(canvas));
   return canvas;
+}
+
+/** Cạnh nhỏ nhất (px trên tranh) của một vùng tô: ngón tay bé 2–5 tuổi phải chạm trúng. */
+export const MIN_REGION_PX = 25;
+const WALL = 110; // khớp FloodFillEngine.WALL_ALPHA
+
+/**
+ * Lấp mực mọi vùng kín lọt thỏm trong khung MIN_REGION_PX x MIN_REGION_PX — các khe nhọn sinh ra
+ * khi hai hình chồng lên nhau (tia nắng sau vành hành tinh, đường đồi lách giữa cánh hoa...) —
+ * để bé không gặp ô li ti không tô được; nhìn như chỗ giao nét đậm lên một chút.
+ * Đốm sáng trong mắt (lỗ nằm gọn trong mảng mực đặc) được giữ nguyên. Trả về số vùng đã lấp.
+ */
+function sealTinyRegions(canvas: HTMLCanvasElement): number {
+  const w = canvas.width;
+  const h = canvas.height;
+  const c = ctx2d(canvas);
+  const img = c.getImageData(0, 0, w, h);
+  const d = img.data;
+  const n = w * h;
+  const seen = new Uint8Array(n);
+  const stack = new Int32Array(n);
+  const isInk = (x: number, y: number) => x < 0 || y < 0 || x >= w || y >= h || d[(y * w + x) * 4 + 3] >= WALL;
+  let sealed = 0;
+  for (let s = 0; s < n; s++) {
+    if (seen[s] || d[s * 4 + 3] >= WALL) continue;
+    // loang 4 hướng; `stack` vừa là hàng đợi vừa là danh sách điểm của vùng
+    let top = 0;
+    let len = 0;
+    let x0 = w, y0 = h, x1 = 0, y1 = 0;
+    let edge = false;
+    seen[s] = 1;
+    stack[len++] = s;
+    while (top < len) {
+      const i = stack[top++];
+      const x = i % w;
+      const y = (i / w) | 0;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+      if (x === 0 || y === 0 || x === w - 1 || y === h - 1) edge = true;
+      if (x > 0 && !seen[i - 1] && d[(i - 1) * 4 + 3] < WALL) (seen[i - 1] = 1), (stack[len++] = i - 1);
+      if (x < w - 1 && !seen[i + 1] && d[(i + 1) * 4 + 3] < WALL) (seen[i + 1] = 1), (stack[len++] = i + 1);
+      if (y > 0 && !seen[i - w] && d[(i - w) * 4 + 3] < WALL) (seen[i - w] = 1), (stack[len++] = i - w);
+      if (y < h - 1 && !seen[i + w] && d[(i + w) * 4 + 3] < WALL) (seen[i + w] = 1), (stack[len++] = i + w);
+    }
+    if (edge || x1 - x0 + 1 >= MIN_REGION_PX || y1 - y0 + 1 >= MIN_REGION_PX) continue;
+    // đốm sáng trong mắt: vành cách khung bao 3px gần như toàn mực -> giữ
+    let ink = 0;
+    let tot = 0;
+    for (let x = x0 - 3; x <= x1 + 3; x++) for (const y of [y0 - 3, y1 + 3]) (tot++, isInk(x, y) && ink++);
+    for (let y = y0 - 3; y <= y1 + 3; y++) for (const x of [x0 - 3, x1 + 3]) (tot++, isInk(x, y) && ink++);
+    if (ink / tot >= 0.7) continue;
+    for (let k = 0; k < len; k++) {
+      const p = stack[k] * 4;
+      d[p] = INK_R;
+      d[p + 1] = INK_G;
+      d[p + 2] = INK_B;
+      d[p + 3] = 255;
+    }
+    sealed++;
+  }
+  if (sealed) c.putImageData(img, 0, 0);
+  return sealed;
 }
 
 const ANIM_DEFAULTS: Record<AnimKind, [number, number]> = {

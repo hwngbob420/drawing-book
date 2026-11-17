@@ -2,9 +2,13 @@ import { Artwork, AnimPart } from '../types';
 import { SceneLayer, Pen, composeScene, sceneAnim, ground, curve, poly, rrect, circle } from '../engine/SceneComposer';
 
 /**
- * 8 bức tranh bối cảnh, ghép từ SVG Noto Emoji ('n:') và OpenMoji ('o:').
+ * 9 bức tranh bối cảnh, ghép từ bộ hình sách tranh tự vẽ ('s:<tên>', xem scripts/storybook).
  * Mỗi lớp: { s: nguồn, x, y: tâm hình, size: cạnh khung vuông (px trên tranh
  * 1600x1200), rot, flip, anim } hoặc một hàm vẽ nét nền. Lớp sau che lớp trước.
+ *
+ * Bố cục 3 lớp kiểu sách tranh: hậu cảnh (trời, mây, đồi xa) — trung cảnh (1–2 đường đồi
+ * cong lớn, cây/nhà làm mốc) — tiền cảnh (nhân vật chính cao ~50–65% khung, đứng trên đồi gần).
+ * Hình có mặt không nhỏ hơn ~230px để mọi mảng tô >= 25px (kiểm tra: scripts/storybook/render.mjs scenes).
  * Cách thêm tranh mới: xem README.
  */
 
@@ -29,77 +33,65 @@ const hills = (far: number, near: number) => (p: Pen) => {
   );
 };
 
+const tufts = (...pts: [number, number, number?][]) => (p: Pen) => {
+  for (const [x, y, s] of pts) p.grass(x, y, s ?? 1);
+};
+
 const PUPPY: SceneLayer[] = [
-  { s: 'n:1f31e', x: 1350, y: 210, size: 360, anim: 'spin' },
-  { s: 'o:2601', x: 340, y: 180, size: 320, anim: 'drift' },
-  { s: 'o:2601', x: 860, y: 140, size: 250, anim: 'drift', amp: -20 },
-  hills(750, 965),
-  { s: 'n:1f333', x: 235, y: 570, size: 540, anim: 'sway', amp: 12 },
-  (p) => {
-    p.grass(120, 1120, 1.2);
-    p.grass(900, 1150, 1.1);
-    p.grass(1560, 1020, 1);
-    p.grass(1240, 860, 0.9);
-    p.grass(520, 850, 0.9);
-  },
-  { s: 'n:1f98b', x: 1140, y: 470, size: 230, rot: 0.3, anim: 'flutter' },
-  { s: 'n:1f98b', x: 560, y: 370, size: 170, rot: -0.35, anim: 'flutter' },
-  { s: 'n:1f415', x: 800, y: 790, size: 640, anim: 'breathe' },
-  { s: 'n:1f33b', x: 1410, y: 900, size: 360, anim: 'sway' },
-  { s: 'n:1f337', x: 390, y: 1010, size: 280, anim: 'sway' },
-  { s: 'n:1f33c', x: 1130, y: 1060, size: 210, anim: 'sway', amp: 8 },
-  { s: 'n:1f33c', x: 150, y: 960, size: 170, anim: 'sway', amp: 8 },
-  { s: 'n:1f41e', x: 640, y: 1110, size: 140, rot: 0.4, anim: 'hop', amp: 10 },
+  { s: 's:sun', x: 1360, y: 200, size: 330, anim: 'spin' },
+  { s: 's:cloud', x: 330, y: 160, size: 300, anim: 'drift' },
+  { s: 's:cloud', x: 860, y: 130, size: 250, anim: 'drift', amp: -20 },
+  hills(740, 965),
+  { s: 's:tree', x: 230, y: 560, size: 560, anim: 'sway', amp: 12 },
+  { s: 's:bush', x: 1480, y: 720, size: 300 },
+  tufts([140, 1130, 1.3], [1000, 1160, 1.2], [1560, 1040, 1.1], [600, 860, 1]),
+  { s: 's:butterfly', x: 1110, y: 430, size: 250, rot: 0.25, anim: 'flutter' },
+  { s: 's:butterfly', x: 560, y: 330, size: 230, rot: -0.3, anim: 'flutter' },
+  { s: 's:puppy', x: 790, y: 770, size: 680, anim: 'breathe' },
+  { s: 's:ball', x: 1180, y: 1030, size: 240, anim: 'hop', amp: 14 },
+  { s: 's:sunflower', x: 1430, y: 900, size: 380, anim: 'sway' },
+  { s: 's:tulip', x: 400, y: 1010, size: 320, anim: 'sway' },
+  { s: 's:flower', x: 150, y: 990, size: 260, anim: 'sway', amp: 8 },
+  { s: 's:ladybug', x: 610, y: 1110, size: 230, rot: 0.3, anim: 'hop', amp: 10 },
 ];
 
 const DINO: SceneLayer[] = [
-  { s: 'n:1f31e', x: 200, y: 190, size: 310, anim: 'spin' },
-  { s: 'o:2601', x: 700, y: 150, size: 270, anim: 'drift' },
-  { s: 'n:1f30b', x: 1260, y: 500, size: 600 },
+  { s: 's:sun', x: 200, y: 180, size: 300, anim: 'spin' },
+  { s: 's:cloud', x: 700, y: 140, size: 280, anim: 'drift' },
+  { s: 's:volcano', x: 1270, y: 480, size: 600 },
   hills(760, 975),
-  { s: 'n:1f334', x: 240, y: 620, size: 640, anim: 'sway', amp: 12 },
-  { s: 'n:1f334', x: 1500, y: 800, size: 400, flip: true, anim: 'sway', amp: 12 },
-  (p) => {
-    p.grass(520, 1130, 1.2);
-    p.grass(1000, 1150, 1.1);
-    p.grass(1440, 1110, 1);
-  },
-  { s: 'n:1f995', x: 770, y: 700, size: 780, anim: 'breathe', amp: 0.03 },
-  { s: 'n:1f996', x: 1250, y: 960, size: 340, flip: true, anim: 'hop' },
-  { s: 'n:1f95a', x: 330, y: 1040, size: 210, rot: -0.2, anim: 'hop', amp: 12, speed: 5 },
+  { s: 's:palm', x: 220, y: 610, size: 640, anim: 'sway', amp: 12 },
+  { s: 's:pine', x: 1520, y: 780, size: 330, anim: 'sway', amp: 8 },
+  tufts([520, 1140, 1.3], [1020, 1160, 1.2], [1500, 1120, 1.1]),
+  { s: 's:longneck', x: 740, y: 690, size: 780, flip: true, anim: 'breathe', amp: 0.03 },
+  { s: 's:trex', x: 1240, y: 930, size: 420, anim: 'hop' },
+  { s: 's:egg', x: 300, y: 1030, size: 270, rot: -0.15, anim: 'hop', amp: 12, speed: 5 },
+  { s: 's:rock', x: 1500, y: 1080, size: 240 },
 ];
 
+const sparkles = (pts: [number, number][]) => (p: Pen) => {
+  for (const [x, y] of pts) p.line(poly([[x - 16, y], [x + 16, y]], false), poly([[x, y - 16], [x, y + 16]], false));
+};
+
 const SPACE: SceneLayer[] = [
-  (p) => {
-    for (const [x, y] of [
-      [760, 230],
-      [1180, 480],
-      [430, 660],
-      [1480, 780],
-      [880, 930],
-      [90, 330],
-      [1130, 90],
-    ]) {
-      p.line(poly([[x - 15, y], [x + 15, y]], false), poly([[x, y - 15], [x, y + 15]], false));
-    }
-  },
-  { s: 'n:2b50', x: 560, y: 130, size: 150, rot: 0.2, anim: 'breathe', amp: 0.12, speed: 4 },
-  { s: 'n:2b50', x: 940, y: 150, size: 120, rot: -0.3, anim: 'breathe', amp: 0.12, speed: 5 },
-  { s: 'n:2b50', x: 1500, y: 600, size: 150, rot: 0.4, anim: 'breathe', amp: 0.12, speed: 4.4 },
-  { s: 'n:2b50', x: 110, y: 590, size: 130, rot: -0.2, anim: 'breathe', amp: 0.12, speed: 4.8 },
-  { s: 'n:2b50', x: 610, y: 1080, size: 150, rot: 0.3, anim: 'breathe', amp: 0.12, speed: 4.2 },
-  { s: 'n:2b50', x: 1010, y: 1090, size: 120, rot: -0.4 },
-  { s: 'n:1fa90', x: 310, y: 290, size: 440, anim: 'spin', amp: 0.12 },
-  { s: 'n:1f30d', x: 1350, y: 950, size: 380, anim: 'spin', amp: 0.35, speed: 0.8 },
-  { s: 'n:1f319', x: 230, y: 910, size: 320, anim: 'sway', amp: 10 },
-  { s: 'n:1f6f8', x: 1310, y: 290, size: 390, anim: 'drift', amp: 28, speed: 1.6 },
-  { s: 'n:1f680', x: 690, y: 580, size: 660, anim: 'hop', amp: 22, speed: 2.4 },
-  { s: 'n:1f9d1_200d_1f680', x: 1090, y: 650, size: 350, rot: 0.15, anim: 'drift', amp: 16, speed: 1.3 },
+  sparkles([[760, 230], [1250, 440], [430, 660], [1480, 800], [880, 950], [90, 330], [1130, 90]]),
+  { s: 's:twinkle', x: 560, y: 130, size: 160, rot: 0.2, anim: 'breathe', amp: 0.12, speed: 4 },
+  { s: 's:twinkle', x: 960, y: 150, size: 130, rot: -0.3, anim: 'breathe', amp: 0.12, speed: 5 },
+  { s: 's:twinkle', x: 1510, y: 600, size: 150, rot: 0.4, anim: 'breathe', amp: 0.12, speed: 4.4 },
+  { s: 's:twinkle', x: 110, y: 590, size: 140, rot: -0.2, anim: 'breathe', amp: 0.12, speed: 4.8 },
+  { s: 's:twinkle', x: 620, y: 1080, size: 150, rot: 0.3, anim: 'breathe', amp: 0.12, speed: 4.2 },
+  { s: 's:planet', x: 310, y: 290, size: 440, anim: 'spin', amp: 0.12 },
+  { s: 's:earth', x: 1350, y: 960, size: 380, anim: 'spin', amp: 0.35, speed: 0.8 },
+  { s: 's:moon', x: 230, y: 920, size: 330, anim: 'sway', amp: 10 },
+  { s: 's:ufo', x: 1300, y: 280, size: 400, anim: 'drift', amp: 28, speed: 1.6 },
+  { s: 's:rocket', x: 690, y: 600, size: 680, anim: 'hop', amp: 22, speed: 2.4 },
+  { s: 's:astronaut', x: 1080, y: 650, size: 420, rot: 0.12, anim: 'drift', amp: 16, speed: 1.3 },
 ];
 
 const OCEAN: SceneLayer[] = [
-  { s: 'o:1FAE7', x: 1130, y: 190, size: 230, anim: 'hop', amp: 20, speed: 1.6 },
-  { s: 'o:1FAE7', x: 130, y: 200, size: 190, flip: true, anim: 'hop', amp: 18, speed: 1.9 },
+  { s: 's:bubble', x: 1140, y: 180, size: 220, anim: 'hop', amp: 20, speed: 1.6 },
+  { s: 's:bubble', x: 140, y: 200, size: 180, anim: 'hop', amp: 18, speed: 1.9 },
+  { s: 's:bubble', x: 560, y: 110, size: 130, anim: 'hop', amp: 14, speed: 2.2 },
   (p) => {
     p.shape(
       ground(
@@ -110,37 +102,33 @@ const OCEAN: SceneLayer[] = [
         ],
       ),
     );
-    p.shape(circle(700, 1130, 22), circle(1320, 1150, 18), circle(60, 1120, 20));
+    p.shape(circle(700, 1130, 26), circle(1330, 1150, 24), circle(60, 1120, 24));
   },
-  { s: 'n:1fab8', x: 220, y: 900, size: 440, anim: 'sway', amp: 10 },
-  { s: 'n:1fab8', x: 1430, y: 930, size: 380, flip: true, anim: 'sway', amp: 10 },
-  { s: 'n:1f420', x: 300, y: 430, size: 270, anim: 'drift' },
-  { s: 'n:1f41f', x: 1400, y: 380, size: 230, anim: 'drift', amp: -24 },
-  { s: 'n:1f42c', x: 740, y: 400, size: 640, anim: 'hop', amp: 24, speed: 2.2 },
-  { s: 'n:1f419', x: 1130, y: 720, size: 400, anim: 'breathe', amp: 0.06 },
-  { s: 'n:1f422', x: 600, y: 850, size: 420, anim: 'drift', amp: 20, speed: 1.2 },
-  { s: 'n:1f980', x: 930, y: 1080, size: 240, anim: 'hop', amp: 12, speed: 4 },
-  { s: 'n:1f41a', x: 1180, y: 1100, size: 170, rot: 0.3 },
+  { s: 's:seaweed', x: 200, y: 870, size: 480, anim: 'sway', amp: 10 },
+  { s: 's:coral', x: 1440, y: 900, size: 400, anim: 'sway', amp: 8 },
+  { s: 's:fish', x: 300, y: 430, size: 290, anim: 'drift' },
+  { s: 's:fish', x: 1400, y: 380, size: 260, flip: true, anim: 'drift', amp: -24 },
+  { s: 's:dolphin', x: 760, y: 390, size: 660, anim: 'hop', amp: 24, speed: 2.2 },
+  { s: 's:octopus', x: 1130, y: 730, size: 420, anim: 'breathe', amp: 0.06 },
+  { s: 's:turtle', x: 600, y: 850, size: 440, anim: 'drift', amp: 20, speed: 1.2 },
+  { s: 's:crab', x: 940, y: 1060, size: 290, anim: 'hop', amp: 12, speed: 4 },
+  { s: 's:shell', x: 1220, y: 1100, size: 230, rot: 0.25 },
 ];
 
 const FARM: SceneLayer[] = [
-  { s: 'n:1f308', x: 1090, y: 560, size: 980 },
-  { s: 'n:1f31e', x: 210, y: 200, size: 310, anim: 'spin' },
-  { s: 'o:2601', x: 700, y: 150, size: 270, anim: 'drift' },
+  { s: 's:rainbow', x: 1060, y: 560, size: 900 },
+  { s: 's:sun', x: 200, y: 190, size: 300, anim: 'spin' },
+  { s: 's:cloud', x: 680, y: 140, size: 270, anim: 'drift' },
   hills(740, 960),
-  { s: 'n:1f3e1', x: 310, y: 570, size: 470 },
-  { s: 'n:1f333', x: 1400, y: 610, size: 420, anim: 'sway', amp: 12 },
-  (p) => {
-    p.grass(80, 1120, 1.1);
-    p.grass(1500, 1100, 1.1);
-    p.grass(700, 870, 0.9);
-  },
-  { s: 'n:1f416', x: 1340, y: 950, size: 360, flip: true, anim: 'breathe' },
-  { s: 'n:1f408', x: 540, y: 930, size: 410, anim: 'breathe' },
-  { s: 'n:1f407', x: 930, y: 880, size: 400, anim: 'hop', amp: 22 },
-  { s: 'n:1f425', x: 730, y: 1070, size: 220, anim: 'hop', amp: 14, speed: 5 },
-  { s: 'n:1f424', x: 1130, y: 1090, size: 190, anim: 'hop', amp: 12, speed: 4.4 },
-  { s: 'n:1f33c', x: 200, y: 1050, size: 190, anim: 'sway', amp: 8 },
+  { s: 's:house', x: 300, y: 560, size: 480 },
+  { s: 's:tree', x: 1420, y: 590, size: 430, anim: 'sway', amp: 12 },
+  tufts([70, 1130, 1.2], [1520, 1120, 1.2], [700, 880, 1]),
+  { s: 's:pig', x: 1330, y: 950, size: 380, flip: true, anim: 'breathe' },
+  { s: 's:kid_boy', x: 960, y: 820, size: 470, anim: 'hop', amp: 12 },
+  { s: 's:cat', x: 530, y: 930, size: 410, anim: 'breathe' },
+  { s: 's:bunny', x: 180, y: 980, size: 360, anim: 'hop', amp: 22 },
+  { s: 's:chick', x: 760, y: 1070, size: 270, anim: 'hop', amp: 14, speed: 5 },
+  { s: 's:chick', x: 1100, y: 1090, size: 240, flip: true, anim: 'hop', amp: 12, speed: 4.4 },
 ];
 
 const SWEETS: SceneLayer[] = [
@@ -150,69 +138,83 @@ const SWEETS: SceneLayer[] = [
     p.line(curve([[-20, 60], [400, 150], [800, 165], [1200, 150], [1620, 60]]));
     for (let x = 120; x < 1560; x += 190) {
       const y = rope(x) - 6;
-      p.shape(poly([[x - 52, y], [x + 52, y + (rope(x + 52) - rope(x - 52)) + 0], [x, y + 120]]));
+      p.shape(poly([[x - 56, y], [x + 56, y + (rope(x + 56) - rope(x - 56))], [x, y + 126]]));
     }
     // mặt bàn
     p.shape(new Path2D('M-30 900 H1630 V1230 H-30 Z'));
   },
-  { s: 'n:1f352', x: 150, y: 440, size: 250, anim: 'sway', amp: 10 },
-  { s: 'n:1f36d', x: 1420, y: 420, size: 340, rot: 0.2, anim: 'spin', amp: 0.2 },
-  { s: 'n:1f382', x: 800, y: 600, size: 680, anim: 'breathe', amp: 0.025 },
-  { s: 'n:1f366', x: 330, y: 700, size: 480, anim: 'sway', amp: 10 },
-  { s: 'n:1f9c1', x: 1270, y: 780, size: 440, anim: 'hop', amp: 14 },
-  { s: 'n:1f369', x: 560, y: 1040, size: 290, anim: 'spin', amp: 0.25 },
-  { s: 'n:1f353', x: 980, y: 1050, size: 260, rot: 0.15, anim: 'hop', amp: 12, speed: 4 },
-  { s: 'n:1f36c', x: 170, y: 1060, size: 230, anim: 'spin', amp: 0.3 },
-  { s: 'n:1f36c', x: 1440, y: 1080, size: 200, flip: true, anim: 'spin', amp: 0.3 },
+  { s: 's:cherries', x: 160, y: 440, size: 270, anim: 'sway', amp: 10 },
+  { s: 's:lollipop', x: 1420, y: 420, size: 340, rot: 0.2, anim: 'spin', amp: 0.2 },
+  { s: 's:cake', x: 800, y: 600, size: 680, anim: 'breathe', amp: 0.025 },
+  { s: 's:icecream', x: 330, y: 700, size: 480, anim: 'sway', amp: 10 },
+  { s: 's:cupcake', x: 1270, y: 780, size: 440, anim: 'hop', amp: 14 },
+  { s: 's:donut', x: 560, y: 1040, size: 300, anim: 'spin', amp: 0.25 },
+  { s: 's:strawberry', x: 980, y: 1050, size: 280, rot: 0.15, anim: 'hop', amp: 12, speed: 4 },
+  { s: 's:candy', x: 180, y: 1060, size: 250, anim: 'spin', amp: 0.3 },
+  { s: 's:candy', x: 1430, y: 1070, size: 240, flip: true, anim: 'spin', amp: 0.3 },
 ];
 
 const CITY: SceneLayer[] = [
-  { s: 'n:1f31e', x: 180, y: 170, size: 280, anim: 'spin' },
-  { s: 'o:2601', x: 560, y: 330, size: 250, anim: 'drift' },
-  { s: 'o:2601', x: 1420, y: 140, size: 260, anim: 'drift', amp: -22 },
-  { s: 'n:2708', x: 1050, y: 190, size: 390, anim: 'drift', amp: 30, speed: 1.2 },
-  { s: 'n:1f681', x: 520, y: 130, size: 270, anim: 'drift', amp: 20, speed: 1.8 },
+  { s: 's:sun', x: 180, y: 170, size: 280, anim: 'spin' },
+  { s: 's:cloud', x: 560, y: 330, size: 250, anim: 'drift' },
+  { s: 's:cloud', x: 1420, y: 140, size: 260, anim: 'drift', amp: -22 },
+  { s: 's:plane', x: 1040, y: 190, size: 390, anim: 'drift', amp: 30, speed: 1.2 },
+  { s: 's:helicopter', x: 520, y: 140, size: 270, anim: 'drift', amp: 20, speed: 1.8 },
   (p) => {
-    // dãy nhà phía xa
+    // dãy nhà phía xa: ít ô cửa, ô cửa to
     const b = (x: number, y: number, w: number) => {
-      const body = new Path2D(`M${x} ${y} H${x + w} V760 H${x} Z`);
-      p.shape(body);
-      for (let yy = y + 30; yy < 700; yy += 85) for (let xx = x + 24; xx + 46 <= x + w - 16; xx += 70) p.shape(rrect(xx, yy, 46, 52, 8));
+      p.shape(new Path2D(`M${x} ${y} H${x + w} V760 H${x} Z`));
+      for (let yy = y + 36; yy + 70 < 760; yy += 110) for (let xx = x + 26; xx + 56 <= x + w - 20; xx += 84) p.shape(rrect(xx, yy, 56, 64, 12));
     };
-    b(620, 520, 170);
-    b(790, 500, 190);
-    b(1400, 480, 180);
-    // đường ray + đường phố
+    b(620, 520, 180);
+    b(800, 490, 200);
+    b(1400, 470, 190);
+    // vỉa hè + lòng đường
     p.shape(new Path2D('M-30 760 H1630 V1230 H-30 Z'));
     p.shape(new Path2D('M-30 900 H1630 V1230 H-30 Z'));
-    for (let x = 40; x < 1600; x += 260) p.shape(rrect(x, 1048, 130, 26, 13));
+    for (let x = 40; x < 1600; x += 260) p.shape(rrect(x, 1044, 140, 30, 15));
   },
-  { s: 'n:1f3e2', x: 290, y: 510, size: 540 },
-  { s: 'n:1f682', x: 1130, y: 660, size: 520, anim: 'hop', amp: 8, speed: 6 },
-  { s: 'n:1f6a6', x: 660, y: 760, size: 300 },
-  { s: 'n:1f692', x: 430, y: 960, size: 520, anim: 'hop', amp: 10, speed: 5 },
-  { s: 'n:1f697', x: 1200, y: 1040, size: 380, anim: 'drift', amp: 26, speed: 1.5 },
+  { s: 's:building', x: 290, y: 510, size: 540 },
+  { s: 's:train', x: 1150, y: 640, size: 520, anim: 'hop', amp: 8, speed: 6 },
+  { s: 's:trafficlight', x: 690, y: 740, size: 320 },
+  { s: 's:firetruck', x: 440, y: 950, size: 540, anim: 'hop', amp: 10, speed: 5 },
+  { s: 's:car', x: 1200, y: 1040, size: 400, anim: 'drift', amp: 26, speed: 1.5 },
 ];
 
 const FAIRY: SceneLayer[] = [
-  { s: 'n:1f308', x: 560, y: 560, size: 980, flip: true },
-  { s: 'o:2601', x: 1330, y: 150, size: 290, anim: 'drift' },
-  { s: 'n:2b50', x: 900, y: 120, size: 130, rot: 0.2, anim: 'breathe', amp: 0.12, speed: 4 },
-  { s: 'n:2b50', x: 1080, y: 250, size: 100, rot: -0.3, anim: 'breathe', amp: 0.12, speed: 5 },
+  { s: 's:rainbow', x: 560, y: 560, size: 960 },
+  { s: 's:cloud', x: 1330, y: 150, size: 290, anim: 'drift' },
+  { s: 's:twinkle', x: 960, y: 110, size: 140, rot: 0.2, anim: 'breathe', amp: 0.12, speed: 4 },
+  { s: 's:twinkle', x: 120, y: 160, size: 120, rot: -0.3, anim: 'breathe', amp: 0.12, speed: 5 },
   hills(760, 970),
-  { s: 'n:1f3f0', x: 1180, y: 540, size: 620, anim: 'breathe', amp: 0.018 },
-  (p) => {
-    p.grass(90, 900, 0.9);
-    p.grass(900, 1140, 1.1);
-    p.grass(1540, 1130, 1);
-  },
-  { s: 'n:1f98b', x: 330, y: 330, size: 210, rot: -0.3, anim: 'flutter' },
-  { s: 'n:1f98b', x: 860, y: 430, size: 160, rot: 0.3, anim: 'flutter' },
-  { s: 'n:1f984', x: 520, y: 780, size: 680, anim: 'breathe' },
-  { s: 'n:1f344', x: 1130, y: 1010, size: 300, anim: 'hop', amp: 10 },
-  { s: 'n:1f344', x: 1330, y: 1070, size: 190, anim: 'hop', amp: 8, speed: 4 },
-  { s: 'n:1f337', x: 1480, y: 920, size: 270, anim: 'sway' },
-  { s: 'n:1f337', x: 130, y: 1040, size: 240, flip: true, anim: 'sway' },
+  { s: 's:castle', x: 1200, y: 530, size: 620, anim: 'breathe', amp: 0.018 },
+  tufts([90, 900, 1], [920, 1150, 1.2], [1540, 1140, 1.1]),
+  { s: 's:butterfly', x: 300, y: 300, size: 240, rot: -0.3, anim: 'flutter' },
+  { s: 's:fairy', x: 830, y: 360, size: 400, rot: 0.08, anim: 'drift', amp: 16 },
+  { s: 's:unicorn', x: 500, y: 780, size: 680, flip: true, anim: 'breathe' },
+  { s: 's:mushroom', x: 1130, y: 1010, size: 300, anim: 'hop', amp: 10 },
+  { s: 's:mushroom', x: 1330, y: 1060, size: 240, anim: 'hop', amp: 8, speed: 4 },
+  { s: 's:tulip', x: 1490, y: 910, size: 280, anim: 'sway' },
+  { s: 's:tulip', x: 130, y: 1040, size: 260, flip: true, anim: 'sway' },
+];
+
+/** Bạn bè dã ngoại: gấu đọc sách dưới gốc cây, voi con cầm bóng bay, cáo tinh nghịch, bạn nhỏ vẫy tay. */
+const FRIENDS: SceneLayer[] = [
+  { s: 's:sun', x: 1400, y: 180, size: 290, anim: 'spin' },
+  { s: 's:cloud', x: 560, y: 150, size: 290, anim: 'drift' },
+  { s: 's:cloud', x: 1000, y: 110, size: 220, anim: 'drift', amp: -18 },
+  hills(720, 950),
+  { s: 's:tree', x: 230, y: 520, size: 600, anim: 'sway', amp: 10 },
+  { s: 's:bush', x: 1480, y: 700, size: 290 },
+  tufts([620, 870, 1], [1180, 1150, 1.2], [80, 1140, 1.2]),
+  { s: 's:bird', x: 760, y: 300, size: 230, flip: true, anim: 'hop', amp: 12 },
+  { s: 's:balloon', x: 1000, y: 360, size: 330, anim: 'sway', amp: 10 },
+  { s: 's:bear', x: 300, y: 880, size: 430, anim: 'breathe' },
+  { s: 's:elephant', x: 790, y: 770, size: 580, anim: 'breathe' },
+  { s: 's:kid_girl', x: 1150, y: 800, size: 470, anim: 'hop', amp: 12 },
+  { s: 's:fox', x: 1430, y: 900, size: 420, flip: true, anim: 'sway', amp: 6 },
+  { s: 's:flower', x: 560, y: 1080, size: 250, anim: 'sway', amp: 8 },
+  { s: 's:tulip', x: 960, y: 1090, size: 250, anim: 'sway', amp: 8 },
 ];
 
 function scene(id: string, title: string, titleEn: string, layers: SceneLayer[]): Artwork {
@@ -221,6 +223,7 @@ function scene(id: string, title: string, titleEn: string, layers: SceneLayer[])
 
 export const BUILT_IN_ARTWORKS: Artwork[] = [
   scene('s-puppy', 'Chú cún và đồng cỏ nắng', 'Sunny Meadow Puppy', PUPPY),
+  scene('s-friends', 'Bạn bè dã ngoại', 'Picnic Friends', FRIENDS),
   scene('s-dino', 'Thế giới khủng long', 'Dinosaur World', DINO),
   scene('s-space', 'Du hành vũ trụ', 'Space Trip', SPACE),
   scene('s-ocean', 'Đại dương kỳ thú', 'Ocean Friends', OCEAN),

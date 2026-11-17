@@ -1,0 +1,57 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Storybook preview</title>
+<style>
+  body { font: 12px sans-serif; background: #FDFBF7; margin: 8px; }
+  .g { display: flex; flex-wrap: wrap; gap: 8px; }
+  .c { width: var(--px, 200px); text-align: center; }
+  .c img { width: var(--px, 200px); height: var(--px, 200px); background: #fff; border: 1px solid #ddd; }
+  .c.bad img { border: 3px solid #e33; }
+  .c small { color: #c00; display: block; }
+</style>
+<h3>Bản tô màu (normalize) + lint — thêm ?only=a,b để lọc</h3>
+<div class="g" id="g"></div>
+<script type="module">
+  import { normalizeSvg } from '/src/engine/SceneComposer.ts';
+  // Lint quy chuẩn nét tô màu: fill trắng / mực (chỉ mắt-mũi), viền #231F20 3.5|2.5, bo tròn,
+  // mảng kín (không phải mắt/mũi) không nhỏ hơn MIN x MIN đơn vị viewBox (min cạnh >= THIN).
+  const INK = '#231F20', MIN = 28, THIN = 16;
+  const names = await (await fetch('/scripts/storybook/names.json')).json();
+  const qs = new URLSearchParams(location.search);
+  const only = qs.get('only')?.split(',');
+  const size = +(qs.get('size') || 600);
+  if (qs.get('px')) document.body.style.setProperty('--px', qs.get('px') + 'px');
+  const g = document.getElementById('g');
+  window.__lint = [];
+  for (const n of names) {
+    if (only && !only.includes(n)) continue;
+    const text = await (await fetch(`/public/svg/story/${n}.svg`)).text();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:absolute;left:-9999px;width:256px;height:256px';
+    host.innerHTML = text;
+    document.body.append(host);
+    const svg = host.querySelector('svg');
+    const issues = [];
+    if (svg.getAttribute('stroke-linecap') !== 'round' || svg.getAttribute('stroke-linejoin') !== 'round') issues.push('thiếu bo tròn nét');
+    svg.querySelectorAll('path').forEach((el, i) => {
+      const fill = el.getAttribute('fill');
+      const stroke = el.getAttribute('stroke');
+      const exempt = el.hasAttribute('data-eye') || el.hasAttribute('data-nose');
+      if (stroke !== INK) issues.push(`#${i} stroke ${stroke}`);
+      if (fill !== '#FFFFFF' && fill !== 'none' && !(fill === INK && exempt)) issues.push(`#${i} fill ${fill}`);
+      if (!exempt && !['3.5', '2.5', '3'].includes(el.getAttribute('stroke-width'))) issues.push(`#${i} sw ${el.getAttribute('stroke-width')}`);
+      if (fill === '#FFFFFF' && !exempt) {
+        const b = el.getBBox();
+        if (Math.max(b.width, b.height) < MIN || Math.min(b.width, b.height) < THIN) issues.push(`#${i} nhỏ ${b.width.toFixed(0)}x${b.height.toFixed(0)}`);
+      }
+    });
+    host.remove();
+    if (issues.length) window.__lint.push(`${n}: ${issues.join(', ')}`);
+    const norm = normalizeSvg(text, 's:' + n, size, Math.max(5, Math.min(8.5, size * 0.02)));
+    const mk = (src) => `<img src="data:image/svg+xml;utf8,${encodeURIComponent(src)}">`;
+    const d = document.createElement('div');
+    d.className = 'c' + (issues.length ? ' bad' : '');
+    d.innerHTML = mk(norm) + `<div>${n}</div>` + (issues.length ? `<small>${issues.length} lỗi lint</small>` : '');
+    g.append(d);
+  }
+</script>

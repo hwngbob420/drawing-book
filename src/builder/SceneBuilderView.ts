@@ -99,8 +99,8 @@ export class SceneBuilderView {
     sound.say('Con chọn tờ giấy nằm ngang hay đứng?');
     const paper = (o: Orient, a: string, b: string) => h('span', { class: 'paper ' + o }, this.img(a), this.img(b));
     this.body.replaceChildren(
-      this.card([paper('l', 'n:1f31e', 'n:1f42c')], 'Giấy ngang', '#ffe9a8', () => this.pickOrient('l'), 'wide'),
-      this.card([paper('p', 'n:1f680', 'n:1f3f0')], 'Giấy đứng', '#c9ecff', () => this.pickOrient('p'), 'wide'),
+      this.card([paper('l', 's:sun', 's:dolphin')], 'Giấy ngang', '#ffe9a8', () => this.pickOrient('l'), 'wide'),
+      this.card([paper('p', 's:rocket', 's:castle')], 'Giấy đứng', '#c9ecff', () => this.pickOrient('p'), 'wide'),
     );
   }
   private pickOrient(o: Orient) {

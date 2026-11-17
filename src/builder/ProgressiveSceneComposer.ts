@@ -8,7 +8,7 @@ import { BackdropId, Piece, PieceSvg, findHero, BACKDROPS } from './SceneDecisio
 /**
  * ProgressiveSceneComposer — lắp 3 lựa chọn của bé thành một bức tranh.
  *
- *  - svg.js đo khung bao THỰC (`bbox()`) của từng hình SVG (emoji luôn có lề
+ *  - svg.js đo khung bao THỰC (`bbox()`) của từng hình SVG (hình luôn có lề
  *    thừa quanh hình), nhờ đó nhân vật đứng đúng trên mặt đất và việc kiểm tra
  *    va chạm dùng kích thước thật.
  *  - potpack xếp các hình trong MỘT mảnh ghép nhiều hình (ví dụ rùa + bạch
@@ -195,34 +195,30 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
     p.shape(hill(w, h, far, 46 * u, ph));
     p.shape(hill(w, h, near, 40 * u, ph + 2));
   };
-  const grass = (p: Pen) => {
-    for (let i = 0; i < 5; i++) p.grass(w * (0.08 + 0.21 * i + rnd() * 0.06), near + (h - near) * (0.45 + rnd() * 0.45), u * (0.9 + rnd() * 0.3));
-  };
   const bottomRow = (list: string[], size: number, anim: AnimKind | undefined = 'sway'): SceneItem[] =>
     list.map((s, i) => ({ s, x: w * ((i + 0.5) / list.length + (rnd() - 0.5) * 0.06), y: h - size * u * 0.5, size: size * u * (0.9 + rnd() * 0.15), anim }));
 
   switch (id) {
     case 'meadow':
       return {
-        back: [{ s: 'n:1f31e', x: sx(0.84), y: h * (portrait ? 0.1 : 0.16), size: 330 * u, anim: 'spin' }, { s: 'o:2601', x: sx(0.22), y: h * (portrait ? 0.07 : 0.13), size: 280 * u, anim: 'drift' }, { s: 'o:2601', x: sx(0.52), y: h * (portrait ? 0.16 : 0.09), size: 210 * u, anim: 'drift' }, hills, grass],
-        props: bottomRow(['n:1f33c', 'n:1f337', 'n:1f33b', 'n:1f33c', 'n:1f337'], 170),
+        back: [{ s: 's:sun', x: sx(0.84), y: h * (portrait ? 0.1 : 0.16), size: 330 * u, anim: 'spin' }, { s: 's:cloud', x: sx(0.22), y: h * (portrait ? 0.07 : 0.13), size: 280 * u, anim: 'drift' }, { s: 's:cloud', x: sx(0.52), y: h * (portrait ? 0.16 : 0.09), size: 210 * u, anim: 'drift' }, hills],
+        props: bottomRow(['s:flower', 's:tulip', 's:sunflower', 's:tulip'], 250),
         groundY: near + (h - near) * 0.22,
         farY: far + 12 * u,
       };
     case 'forest':
       return {
         back: [
-          it('o:2601', 0.3, portrait ? 0.07 : 0.12, 280, 'drift'),
-          it('o:2601', 0.72, portrait ? 0.14 : 0.09, 220, 'drift'),
+          it('s:cloud', 0.3, portrait ? 0.07 : 0.12, 280, 'drift'),
+          it('s:cloud', 0.72, portrait ? 0.14 : 0.09, 220, 'drift'),
           (p) => p.shape(hill(w, h, far, 46 * u, ph)),
-          { s: 'n:1f333', x: w * 0.1, y: far - 120 * u, size: 470 * u, anim: 'sway' },
-          { s: 'n:1f332', x: w * 0.92, y: far - 110 * u, size: 430 * u, anim: 'sway' },
-          { s: 'n:1f332', x: w * 0.3, y: far - 70 * u, size: 300 * u, anim: 'sway' },
-          { s: 'n:1f333', x: w * 0.7, y: far - 80 * u, size: 320 * u, anim: 'sway' },
+          { s: 's:tree', x: w * 0.1, y: far - 120 * u, size: 470 * u, anim: 'sway' },
+          { s: 's:pine', x: w * 0.92, y: far - 110 * u, size: 430 * u, anim: 'sway' },
+          { s: 's:pine', x: w * 0.3, y: far - 70 * u, size: 300 * u, anim: 'sway' },
+          { s: 's:tree', x: w * 0.7, y: far - 80 * u, size: 320 * u, anim: 'sway' },
           (p) => p.shape(hill(w, h, near, 40 * u, ph + 2)),
-          grass,
         ],
-        props: bottomRow(['n:1f344', 'n:1f337', 'n:1f344', 'n:1f33c'], 170, 'hop'),
+        props: bottomRow(['s:mushroom', 's:tulip', 's:mushroom', 's:flower'], 245, 'hop'),
         groundY: near + (h - near) * 0.22,
         farY: far + 12 * u,
       };
@@ -232,12 +228,12 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
       for (let i = 0; i < cols * 2; i++) {
         const cx = ((i % cols) + 0.5) / cols + (rnd() - 0.5) * 0.1;
         const cy = (portrait ? 0.06 : 0.08) + Math.floor(i / cols) * (portrait ? 0.17 : 0.2) + rnd() * 0.06;
-        stars.push({ s: 'n:2b50', x: cx * w, y: cy * h, size: (110 + rnd() * 70) * u, rot: (rnd() - 0.5) * 0.8, anim: 'breathe', amp: 0.12, speed: 4 + rnd() * 2 });
+        stars.push({ s: 's:twinkle', x: cx * w, y: cy * h, size: (110 + rnd() * 70) * u, rot: (rnd() - 0.5) * 0.8, anim: 'breathe', amp: 0.12, speed: 4 + rnd() * 2 });
       }
       return {
         back: [(p) => p.shape(hill(w, h, near + 30 * u, 50 * u, ph))],
         // trăng đứng đầu danh sách để các ngôi sao tự tránh nó
-        props: [{ s: 'n:1f319', x: sx(0.86), y: h * (portrait ? 0.09 : 0.15), size: 300 * u, anim: 'sway' }, ...stars, { s: 'n:2601', x: sx(0.75), y: h * (portrait ? 0.3 : 0.36), size: 260 * u, anim: 'drift' }],
+        props: [{ s: 's:moon', x: sx(0.86), y: h * (portrait ? 0.09 : 0.15), size: 300 * u, anim: 'sway' }, ...stars, { s: 's:cloud', x: sx(0.75), y: h * (portrait ? 0.3 : 0.36), size: 260 * u, anim: 'drift' }],
         groundY: near + (h - near) * 0.5,
         farY: near + 40 * u,
       };
@@ -251,13 +247,13 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
           },
         ],
         props: [
-          { s: 'n:1fab8', x: w * 0.1, y: h * 0.82, size: 330 * u, anim: 'sway' },
-          { s: 'n:1fab8', x: w * 0.9, y: h * 0.83, size: 300 * u, flip: true, anim: 'sway' },
-          it('o:1FAE7', 0.12, 0.12, 200, 'hop'),
-          it('o:1FAE7', 0.86, 0.1, 180, 'hop', { flip: true }),
-          it('o:1FAE7', 0.5, 0.06, 150, 'hop'),
-          { s: 'n:1f41f', x: sx(0.15), y: h * 0.4, size: 190 * u, anim: 'drift', flip: !sunLeft },
-          it('n:1f41a', 0.5, 0.94, 150),
+          { s: 's:coral', x: w * 0.1, y: h * 0.82, size: 330 * u, anim: 'sway' },
+          { s: 's:coral', x: w * 0.9, y: h * 0.83, size: 300 * u, flip: true, anim: 'sway' },
+          it('s:bubble', 0.12, 0.12, 200, 'hop'),
+          it('s:bubble', 0.86, 0.1, 180, 'hop', { flip: true }),
+          it('s:bubble', 0.5, 0.06, 150, 'hop'),
+          { s: 's:fish', x: sx(0.15), y: h * 0.4, size: 260 * u, anim: 'drift', flip: !sunLeft },
+          it('s:shell', 0.5, 0.92, 230),
         ],
         groundY: h * 0.9,
         farY: h * 0.88,
@@ -267,8 +263,8 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
       const sand = h * (portrait ? 0.76 : 0.78);
       return {
         back: [
-          { s: 'n:1f31e', x: sx(0.84), y: h * (portrait ? 0.1 : 0.16), size: 320 * u, anim: 'spin' },
-          { s: 'o:2601', x: sx(0.26), y: h * (portrait ? 0.08 : 0.12), size: 270 * u, anim: 'drift' },
+          { s: 's:sun', x: sx(0.84), y: h * (portrait ? 0.1 : 0.16), size: 320 * u, anim: 'spin' },
+          { s: 's:cloud', x: sx(0.26), y: h * (portrait ? 0.08 : 0.12), size: 270 * u, anim: 'drift' },
           (p) => {
             // mặt biển lượn sóng + bãi cát
             const wave = new Path2D();
@@ -286,9 +282,9 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
             p.shape(wave);
             p.shape(hill(w, h, sand, 34 * u, ph));
           },
-          { s: 'n:1f334', x: sx(0.9), y: sand - 150 * u, size: 520 * u, flip: !sunLeft, anim: 'sway' },
+          { s: 's:palm', x: sx(0.9), y: sand - 150 * u, size: 520 * u, flip: !sunLeft, anim: 'sway' },
         ],
-        props: [it('n:1f980', 0.3, 0.93, 190, 'hop'), it('n:1f41a', 0.6, 0.94, 150), { s: 'n:1f30a', x: sx(0.18), y: h * (portrait ? 0.56 : 0.6), size: 240 * u, anim: 'sway' }],
+        props: [it('s:crab', 0.3, 0.9, 270, 'hop'), it('s:shell', 0.62, 0.92, 230), { s: 's:wave', x: sx(0.18), y: h * (portrait ? 0.56 : 0.6), size: 240 * u, anim: 'sway' }],
         groundY: sand + (h - sand) * 0.5,
         farY: sand + 10 * u,
       };
@@ -298,8 +294,8 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
       const street = h * (portrait ? 0.5 : 0.56);
       return {
         back: [
-          { s: 'n:1f31e', x: sx(0.86), y: h * (portrait ? 0.08 : 0.14), size: 280 * u, anim: 'spin' },
-          { s: 'o:2601', x: sx(0.3), y: h * (portrait ? 0.07 : 0.11), size: 260 * u, anim: 'drift' },
+          { s: 's:sun', x: sx(0.86), y: h * (portrait ? 0.08 : 0.14), size: 280 * u, anim: 'spin' },
+          { s: 's:cloud', x: sx(0.3), y: h * (portrait ? 0.07 : 0.11), size: 260 * u, anim: 'drift' },
           (p) => {
             const b = (x: number, top: number, bw: number) => {
               p.shape(new Path2D(`M${x} ${top} H${x + bw} V${street} H${x} Z`));

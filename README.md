@@ -1,6 +1,6 @@
 # 🎨 Sách Tô Màu Phép Thuật (Magic Coloring Book)
 
-Ứng dụng tô màu HTML5 cho trẻ 2–8 tuổi. Lõi là **HTML5 Canvas + TypeScript thuần** (Vite chỉ dùng để bundle), không framework. Tranh mẫu được ghép từ SVG Noto Emoji và OpenMoji đã chuẩn hoá thành nét tô màu; âm thanh tổng hợp bằng Web Audio; hai thư viện nhỏ là anime.js và canvas-confetti.
+Ứng dụng tô màu HTML5 cho trẻ 2–8 tuổi. Lõi là **HTML5 Canvas + TypeScript thuần** (Vite chỉ dùng để bundle), không framework. Tranh mẫu được ghép từ bộ hình sách tranh tự vẽ bằng code (`scripts/storybook/`, nét `#231F20` trên nền trắng, mảng tô to cho bé 2–5 tuổi); âm thanh tổng hợp bằng Web Audio; hai thư viện nhỏ là anime.js và canvas-confetti.
 
 ## Chạy local
 
@@ -31,7 +31,7 @@ src/studio/
 └── FullBleedStudioView.ts      studio tràn viền (thay StudioView cũ)
 ```
 
-Thêm nhân vật cho Xưởng: khai báo trong `SceneDecisionTree.ts` (mỗi `Hero` cần đúng 3 `companions` và 3 `backdrops`), thêm mã emoji vào `scripts/extract-assets.mjs` rồi chạy lại script. Không gian nền mới viết trong hàm `backdrop()` của `ProgressiveSceneComposer.ts`.
+Thêm nhân vật cho Xưởng: khai báo trong `SceneDecisionTree.ts` (mỗi `Hero` cần đúng 3 `companions` và 3 `backdrops`), thêm hình mới vào `scripts/storybook/*.mjs` rồi chạy `node scripts/storybook/index.mjs`. Không gian nền mới viết trong hàm `backdrop()` của `ProgressiveSceneComposer.ts`.
 
 ## Kiến trúc 4 lớp canvas (1600×1200)
 
@@ -80,7 +80,8 @@ Với mỗi hình SVG trong một bức tranh:
 
 ## Tài nguyên và giấy phép
 
-- **Noto Emoji** © Google, Apache License 2.0: nguồn nhân vật và cảnh vật trong tranh (`public/svg/noto/`), đã chỉnh sửa thành nét tô màu.
+- **Bộ hình sách tranh** (`public/svg/story/`): vẽ riêng cho dự án bằng `scripts/storybook/`. Quy trình tự render–tự phê bình học theo các skill minh hoạ trong `.claude/skills/` (MengTo/Skills, coloring-book-skill, niyam-notionaly — MIT); dáng đứng của bạn nhỏ tham khảo bộ humaaans (CC BY 4.0, Pablo Stanley) nhưng vẽ lại hoàn toàn, không dùng vector gốc.
+- **Noto Emoji** © Google, Apache License 2.0 (`public/svg/noto/`): không còn dùng trong tranh mẫu, giữ lại để tương thích.
 - **OpenMoji** (openmoji.org), CC BY-SA 4.0: icon giao diện (`src/assets/icons/`) và mây, bong bóng (`public/svg/openmoji/`). Giấy phép này yêu cầu ghi công và chia sẻ bản chỉnh sửa theo cùng giấy phép; lời ghi công có trong Góc phụ huynh.
 - **anime.js** (MIT), **canvas-confetti** (ISC), **panzoom** (MIT), **interact.js** (MIT), **svg.js** (MIT), **potpack** (ISC): cài qua npm.
 - **clay.css** (MIT): chỉ học công thức đổ bóng 3 lớp, viết lại trong `src/style.css`.
@@ -105,20 +106,32 @@ Với mỗi hình SVG trong một bức tranh:
 ## Thêm tranh mới
 
 1. **Không cần code**: giữ nút khoá (Phụ huynh) ở phòng tranh 2,5 giây, rồi chọn *Tải tranh từ máy* (PNG/JPG đen trắng).
-2. **Ghép từ SVG**:
-   - Thêm mã emoji vào danh sách `NOTO` (hoặc `OPENMOJI`) trong `scripts/extract-assets.mjs` rồi chạy `node scripts/extract-assets.mjs` (cần có `.refs/`).
+2. **Ghép từ bộ hình sách tranh**:
+   - Vẽ hình mới trong `scripts/storybook/*.mjs` (`lib.<tên> = () => new Art()...`, viewBox 256, đường cong Catmull-Rom; xem quy ước đầu `engine.mjs`), rồi chạy `node scripts/storybook/index.mjs` để sinh `public/svg/story/<tên>.svg`.
    - Khai báo cảnh trong `src/data/BuiltInArtworks.ts` và thêm vào `BUILT_IN_ARTWORKS`:
 
 ```ts
 const JUNGLE: SceneLayer[] = [
-  { s: 'n:1f31e', x: 1350, y: 210, size: 360, anim: 'spin' },   // lớp sau cùng
-  hills(750, 965),                                              // nét nền (hàm vẽ)
-  { s: 'n:1f418', x: 800, y: 760, size: 700, anim: 'breathe' }, // lớp sau che lớp trước
+  { s: 's:sun', x: 1350, y: 210, size: 360, anim: 'spin' },        // lớp sau cùng
+  hills(750, 965),                                                // nét nền (hàm vẽ)
+  { s: 's:elephant', x: 800, y: 760, size: 700, anim: 'breathe' }, // lớp sau che lớp trước
 ];
 scene('s-jungle', 'Rừng xanh', 'Jungle', JUNGLE);
 ```
 
-`x, y` là tâm hình trên khung 1600×1200, `size` là cạnh khung vuông của hình, `rot`/`flip` để xoay/lật, `anim` (`breathe`, `drift`, `spin`, `sway`, `flutter`, `hop`) là kiểu chuyển động trong chế độ Thức Giấc. Nên ưu tiên SVG Noto vì các mảng luôn khép kín.
+`x, y` là tâm hình trên khung 1600×1200, `size` là cạnh khung vuông của hình, `rot`/`flip` để xoay/lật, `anim` (`breathe`, `drift`, `spin`, `sway`, `flutter`, `hop`) là kiểu chuyển động trong chế độ Thức Giấc. Hình có mặt (mắt, mũi) nên đặt `size` ≥ 230 để mọi mảng tô ≥ 25px.
+
+### Kiểm tra thị giác (render headless)
+
+Khi dev server đang chạy (`npm run dev`), cần `playwright-core` + Chromium:
+
+```bash
+node scripts/storybook/render.mjs stickers out/stickers.png   # bảng hình + lint quy chuẩn nét (fill, stroke, mảng quá nhỏ)
+node scripts/storybook/render.mjs scenes out/scenes            # mỗi tranh mẫu một PNG, vùng tô < 25px khoanh đỏ
+node scripts/storybook/render.mjs builder out/builder          # 27 tổ hợp của Xưởng Phép Thuật
+```
+
+Thêm `--url http://localhost:5174` nếu Vite chạy ở cổng khác, `--only a,b` để lọc, `--px 330` để phóng to bảng hình.
 
 ## Ghi chú
 

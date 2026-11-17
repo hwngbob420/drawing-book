@@ -1,0 +1,89 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Storybook scenes</title>
+<style>
+  body { font: 12px sans-serif; background: #eee; margin: 8px; }
+  canvas { width: 480px; background: #fff; margin: 4px; }
+</style>
+<div id="g"></div>
+<script type="module">
+  // Dựng tranh thật (composeScene) để render.mjs chụp PNG: ?mode=scenes|builder&only=id1,id2
+  import { BUILT_IN_ARTWORKS } from '/src/data/BuiltInArtworks.ts';
+  import { HEROES } from '/src/builder/SceneDecisionTree.ts';
+  import { recipeToArtwork } from '/src/builder/ProgressiveSceneComposer.ts';
+
+  const qs = new URLSearchParams(location.search);
+  const mode = qs.get('mode') || 'scenes';
+  const only = qs.get('only')?.split(',');
+  const jobs = [];
+  if (mode === 'scenes') for (const a of BUILT_IN_ARTWORKS) jobs.push([a.id, a]);
+  else if (qs.get('full'))
+    // mọi tổ hợp bé có thể chọn: nhân vật x bạn đồng hành x nền x khổ giấy (seed đổi theo tổ hợp)
+    for (const hero of HEROES)
+      hero.companions.forEach((comp, ci) =>
+        hero.backdrops.forEach((bg, bi) =>
+          ['l', 'p'].forEach((orient, oi) => {
+            const r = { orient, hero: hero.id, comp: comp.id, bg, seed: 1 + ci * 7 + bi * 3 + oi };
+            jobs.push([`${hero.id}-${comp.id}-${bg}-${orient}`, recipeToArtwork('t', r)]);
+          }),
+        ),
+      );
+  else
+    for (const hero of HEROES)
+      hero.backdrops.forEach((bg, i) => {
+        const orient = i === 1 ? 'p' : 'l';
+        const r = { orient, hero: hero.id, comp: hero.companions[i].id, bg, seed: 3 + i };
+        jobs.push([`${hero.id}-${hero.companions[i].id}-${bg}-${orient}`, recipeToArtwork('t', r)]);
+      });
+
+  // Kiểm tra vùng tô thật trên tranh đã ghép: mọi vùng kín (không phải mực, alpha < 110 như FloodFillEngine)
+  // có khung bao nhỏ hơn 25x25 px bị khoanh đỏ. Đốm sáng trong mắt cũng hiện ra (được miễn) — xem bằng mắt.
+  function smallRegions(ink, minPx = 25) {
+    const w = ink.width, h = ink.height;
+    const d = ink.getContext('2d').getImageData(0, 0, w, h).data;
+    const lab = new Int32Array(w * h).fill(-1);
+    const out = [];
+    const st = new Int32Array(w * h);
+    for (let s = 0; s < w * h; s++) {
+      if (lab[s] !== -1 || d[s * 4 + 3] >= 110) continue;
+      let sp = 0, x0 = w, y0 = h, x1 = 0, y1 = 0, n = 0, edge = false;
+      st[sp++] = s; lab[s] = s;
+      while (sp) {
+        const i = st[--sp], x = i % w, y = (i / w) | 0;
+        n++;
+        if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+        if (x === 0 || y === 0 || x === w - 1 || y === h - 1) edge = true;
+        for (const j of [x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1])
+          if (j >= 0 && lab[j] === -1 && d[j * 4 + 3] < 110) { lab[j] = s; st[sp++] = j; }
+      }
+      if (edge || x1 - x0 + 1 >= minPx || y1 - y0 + 1 >= minPx || n <= 12) continue;
+      // lỗ nằm trọn trong mảng mực đặc (đốm sáng trong mắt) -> miễn: viền ngoài khung bao cách 3px gần như toàn mực
+      let ink = 0, tot = 0;
+      for (let x = x0 - 3; x <= x1 + 3; x++) for (const y of [y0 - 3, y1 + 3]) { tot++; if (d[(y * w + x) * 4 + 3] >= 110) ink++; }
+      for (let y = y0 - 3; y <= y1 + 3; y++) for (const x of [x0 - 3, x1 + 3]) { tot++; if (d[(y * w + x) * 4 + 3] >= 110) ink++; }
+      if (ink / tot < 0.7) out.push([x0, y0, x1 - x0 + 1, y1 - y0 + 1, n]);
+    }
+    return out;
+  }
+  window.__report = [];
+  window.__shots = [];
+  for (const [name, art] of jobs) {
+    if (only && !only.some((o) => name.startsWith(o))) continue;
+    const ink = await art.render();
+    const c = document.createElement('canvas');
+    c.width = ink.width;
+    c.height = ink.height;
+    const g = c.getContext('2d');
+    g.fillStyle = '#fff';
+    g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(ink, 0, 0);
+    const small = smallRegions(ink);
+    g.strokeStyle = '#ff2020';
+    g.lineWidth = 4;
+    for (const [x, y, bw, bh] of small) g.strokeRect(x - 8, y - 8, bw + 16, bh + 16);
+    window.__report.push(`${name}: ${small.length} vùng < 25px, đã lấp ${ink.dataset.sealed || 0}` + (small.length ? ' ' + small.slice(0, 12).map(([x, y, bw, bh, n]) => `(${x},${y} ${bw}x${bh} ${n}px)`).join(' ') : ''));
+    document.getElementById('g').append(c);
+    window.__shots.push([name, c.toDataURL('image/png')]);
+  }
+  window.__done = true;
+</script>

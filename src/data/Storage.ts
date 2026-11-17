@@ -8,7 +8,17 @@ export interface Progress {
   thumb?: string;
   done?: boolean;
   updated: number;
+  /** Phiên bản bộ nét lúc lưu (xem ART_VERSION). */
+  art?: number;
 }
+
+/**
+ * Phiên bản bộ nét của tranh mẫu & Xưởng Phép Thuật. Tiến độ lưu là các nét tô theo toạ độ trên
+ * nét vẽ cũ, nên khi vẽ lại bộ hình phải tăng số này: tiến độ cũ bị bỏ qua thay vì đổ màu lệch
+ * lên nét mới. Tranh phụ huynh tải lên (`upload-`) không đổi nét nên luôn giữ tiến độ.
+ */
+export const ART_VERSION = 2;
+const current = (p: Progress | undefined) => (p && (p.id.startsWith('upload-') || p.art === ART_VERSION) ? p : undefined);
 
 /** Tranh bé tự ghép ở Xưởng Phép Thuật: chỉ lưu "công thức", tranh được dựng lại khi mở. */
 export interface CustomRecord {
@@ -57,9 +67,9 @@ async function run<T>(store: string, mode: IDBTransactionMode, fn: (s: IDBObject
 }
 
 export const Storage = {
-  getProgress: (id: string) => run<Progress>('progress', 'readonly', (s) => s.get(id)),
-  allProgress: async () => (await run<Progress[]>('progress', 'readonly', (s) => s.getAll())) ?? [],
-  saveProgress: (p: Progress) => run('progress', 'readwrite', (s) => s.put(p)),
+  getProgress: async (id: string) => current(await run<Progress>('progress', 'readonly', (s) => s.get(id))),
+  allProgress: async () => ((await run<Progress[]>('progress', 'readonly', (s) => s.getAll())) ?? []).filter((p) => current(p)),
+  saveProgress: (p: Progress) => run('progress', 'readwrite', (s) => s.put({ ...p, art: ART_VERSION })),
   deleteProgress: (id: string) => run('progress', 'readwrite', (s) => s.delete(id)),
   allUploads: async () => (await run<UploadRecord[]>('uploads', 'readonly', (s) => s.getAll())) ?? [],
   saveUpload: (u: UploadRecord) => run('uploads', 'readwrite', (s) => s.put(u)),
