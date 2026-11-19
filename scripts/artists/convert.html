@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Artist SVG convert</title>
+<script type="module">
+  // Chạy bởi convert.mjs: chuyển mọi mục trong catalog.json bằng SvgLineArtConverter, trả kết quả qua window.__out
+  import { convertToLineArt } from '/src/engine/SvgLineArtConverter.ts';
+  const cat = await (await fetch('/scripts/artists/catalog.json')).json();
+  window.__out = [];
+  for (const it of cat.items) {
+    const src = cat.sources[it.source];
+    try {
+      const text = await (await fetch(`/${src.dir}/${it.file}`)).text();
+      const { svg, report } = convertToLineArt(text, it.options || {});
+      window.__out.push({ id: it.id, svg, report });
+    } catch (e) {
+      window.__out.push({ id: it.id, error: String(e) });
+    }
+  }
+  window.__done = true;
+</script>

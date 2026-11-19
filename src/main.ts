@@ -1,6 +1,7 @@
 import './style.css';
 import { Artwork } from './types';
 import { BUILT_IN_ARTWORKS } from './data/BuiltInArtworks';
+import { loadManifestArtworks } from './data/ArtworkManifest';
 import { Storage } from './data/Storage';
 import { GalleryView, uploadToArtwork } from './ui/GalleryView';
 import { FullBleedStudioView } from './studio/FullBleedStudioView';
@@ -10,12 +11,14 @@ import { Recipe, recipeToArtwork } from './builder/ProgressiveSceneComposer';
 /** Khởi tạo app và chuyển cảnh Gallery <-> Xưởng Phép Thuật <-> Studio. */
 const app = document.getElementById('app')!;
 let artworks: Artwork[] = [...BUILT_IN_ARTWORKS];
+/** Tranh thả vào public/artworks/ (đọc manifest một lần). */
+const manifestArtworks = loadManifestArtworks();
 
 async function reload() {
-  const [uploads, customs] = await Promise.all([Storage.allUploads(), Storage.allCustom()]);
+  const [uploads, customs, dropped] = await Promise.all([Storage.allUploads(), Storage.allCustom(), manifestArtworks]);
   uploads.sort((a, b) => a.created - b.created);
   customs.sort((a, b) => b.created - a.created);
-  artworks = [...customs.map((c) => recipeToArtwork(c.id, c.recipe as Recipe)), ...BUILT_IN_ARTWORKS, ...uploads.map(uploadToArtwork)];
+  artworks = [...customs.map((c) => recipeToArtwork(c.id, c.recipe as Recipe)), ...BUILT_IN_ARTWORKS, ...dropped, ...uploads.map(uploadToArtwork)];
 }
 
 function showGallery() {

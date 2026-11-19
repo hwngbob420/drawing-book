@@ -4,7 +4,7 @@ import { loadImage, processLineArt, canvasToBlob } from '../engine/LineArtProces
 import { sound } from '../audio/SoundManager';
 import { h, holdButton, toast } from './dom';
 import { icon } from './icons';
-import { svgUrl } from '../engine/SceneComposer';
+import { svgImg } from '../engine/SceneComposer';
 import { PAPER } from '../engine/PatternGenerator';
 import { boing } from './fx';
 
@@ -45,7 +45,7 @@ export class GalleryView {
     const workshop = h(
       'button',
       { class: 'card clay workshop', 'aria-label': 'Xưởng Phép Thuật — Tự Tạo Tranh' },
-      h('div', { class: 'w-art' }, icon('wand'), ...['s:unicorn', 's:trex', 's:puppy'].map((s) => h('img', { src: svgUrl(s), alt: '', draggable: 'false' }))),
+      h('div', { class: 'w-art' }, icon('wand'), ...['s:unicorn', 's:trex', 'a:dog'].map((s) => svgImg(s, 120))),
       h('div', { class: 'name' }, 'Xưởng Phép Thuật', h('small', {}, 'Tự tạo tranh')),
     );
     workshop.addEventListener('click', () => {
@@ -133,7 +133,7 @@ export class GalleryView {
         h('h3', {}, 'Dữ liệu'),
         wipe,
         h('button', { class: 'pbtn', onclick: () => this.closePanel() }, 'Đóng'),
-        h('p', { class: 'credits' }, 'Hình minh hoạ: bộ nét sách tranh vẽ riêng cho ứng dụng. Icon giao diện: OpenMoji (CC BY-SA 4.0).'),
+        h('p', { class: 'credits' }, 'Hình minh hoạ: nét sách tranh vẽ riêng cho ứng dụng; Mega Doodles Pack © Maria Letta (CC BY-SA 4.0, đã chuyển thành nét tô màu); Free Gophers Pack © Maria Letta (CC0); IRA Design © Creative Tim (MIT). Icon giao diện: OpenMoji (CC BY-SA 4.0).'),
       ),
     );
     this.panel.hidden = false;

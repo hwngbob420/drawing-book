@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Artist SVG pilot</title>
+<style>
+  body { font: 12px sans-serif; margin: 8px; background: #f4f4f4; }
+  .row { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+  .row img { width: 300px; height: 300px; background: #fff; border: 1px solid #ccc; object-fit: contain; }
+  .row div { width: 200px; }
+</style>
+<div id="g"></div>
+<script type="module">
+  // So sánh gốc / sau chuyển đổi / bản tô màu ở 600px: ?f=đường/dẫn1.svg,đường/dẫn2.svg
+  import { convertToLineArt } from '/src/engine/SvgLineArtConverter.ts';
+  import { normalizeSvg } from '/src/engine/SceneComposer.ts';
+  const files = new URLSearchParams(location.search).get('f').split(',');
+  const page = new URLSearchParams(location.search).get('page');
+  const img = (s) => `<img src="data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(s)))}">`;
+  for (const f of files) {
+    const text = await (await fetch('/' + f)).text();
+    const row = document.createElement('div');
+    row.className = 'row';
+    try {
+      const t0 = performance.now();
+      const { svg, report } = convertToLineArt(text, { page: !!page, maxShapes: 3000 });
+      report.ms = Math.round(performance.now() - t0);
+      report.paths = (text.match(/<(path|polygon|rect|circle|ellipse)/g) || []).length;
+      const norm = normalizeSvg(svg, 'a:x', 600, 8.5);
+      row.innerHTML = img(text) + img(svg) + img(norm) + `<div>${f}<br>${JSON.stringify(report)}</div>`;
+    } catch (e) {
+      row.innerHTML = img(text) + `<div>${f}<br>LỖI ${e}</div>`;
+    }
+    document.getElementById('g').append(row);
+  }
+  window.__done = true;
+</script>

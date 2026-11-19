@@ -20,8 +20,6 @@ lib.twinkle = () => {
 lib.moon = () => {
   const a = new Art();
   a.shape('M176 20 C96 28 48 92 66 164 C84 228 154 252 224 226 C150 214 122 160 138 104 C146 72 160 44 176 20Z');
-  a.happyEye(110, 158, 12);
-  a.smile(106, 190, 24, 7);
   return a;
 };
 

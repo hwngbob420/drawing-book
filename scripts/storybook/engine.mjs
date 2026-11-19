@@ -1,15 +1,15 @@
 // Storybook SVG engine — vẽ nhân vật/vật thể bằng đường cong mượt (Catmull-Rom -> Bezier).
 // Quy ước nét tô màu (khớp SceneComposer.normalizeSvg):
-//  - viewBox 256x256. Mọi mảng fill="#FFFFFF", viền stroke="#231F20" 3.5 (nét ngoài) / 2.5 (nét chia mảng),
-//    đầu nét & góc nối bo tròn. Bộ ghép giữ tỉ lệ 3.5 : 2.5 và tô lại độ dày thật theo kích thước trên tranh.
+//  - viewBox 256x256. Mọi mảng fill="#FFFFFF", viền stroke="#231F20" 4 (nét ngoài) / 2.2 (nét chia mảng),
+//    đầu nét & góc nối bo tròn. Bộ ghép giữ tỉ lệ 4 : 2.2 (khớp SvgLineArtConverter) và tô lại độ dày thật theo kích thước trên tranh.
 //  - Mực đặc chỉ cho mắt/mũi (gắn data-eye / data-nose để lint miễn kiểm tra kích thước).
 //  - Không mảng kín nào nhỏ hơn MIN_REGION (đơn vị viewBox) ngoài mắt/mũi: ngón tay bé 2–5 tuổi phải chạm trúng.
 //  - Thứ tự vẽ = thứ tự che khuất: hình vẽ sau đè hình vẽ trước (nền trắng đặc).
 
 export const INK = '#231F20';
 export const FILL = '#FFFFFF';
-export const W_OUT = 3.5;
-export const W_IN = 2.5;
+export const W_OUT = 4;
+export const W_IN = 2.2;
 export const MIN_REGION = 28;
 
 const f = (n) => +n.toFixed(2);

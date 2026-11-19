@@ -1,5 +1,5 @@
 import { Artwork, Orient, makeCanvas, ctx2d } from '../types';
-import { svgUrl, composeScene } from '../engine/SceneComposer';
+import { svgImg, composeScene } from '../engine/SceneComposer';
 import { PAPER } from '../engine/PatternGenerator';
 import { sound } from '../audio/SoundManager';
 import { Storage } from '../data/Storage';
@@ -80,7 +80,7 @@ export class SceneBuilderView {
   }
 
   private img(src: string, cls = ''): HTMLImageElement {
-    return h('img', { src: svgUrl(src), alt: '', draggable: 'false', class: cls });
+    return svgImg(src, 180, cls ? { class: cls } : {});
   }
 
   /** Hình minh hoạ của một mảnh ghép: hình chính to, các hình phụ nhỏ hơn bên cạnh. */

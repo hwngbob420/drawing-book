@@ -33,6 +33,7 @@ const args = process.argv.slice(2);
 const opt = (name, def) => { const i = args.indexOf(name); if (i < 0) return def; const v = args[i + 1]; args.splice(i, 2); return v; };
 const base = opt('--url', 'http://localhost:5173');
 const only = opt('--only', '');
+const pagePath = opt('--path', '/');
 const [mode, out] = args;
 if (!mode || !out) {
   console.error('node render.mjs stickers|scenes|builder <out> [--only a,b] [--url ...]');
@@ -59,7 +60,15 @@ page.on('response', (r) => r.status() >= 400 && !r.url().endsWith('favicon.ico')
 
 const px = opt('--px', '');
 const q = '?' + [only && 'only=' + only, px && 'px=' + px].filter(Boolean).join('&');
-if (mode === 'stickers') {
+if (mode === 'page') {
+  // chụp nguyên một trang thử nghiệm (đợi window.__done): node render.mjs page out.png --path /scripts/artists/pilot.html?f=...
+  await page.goto(base + pagePath);
+  await page.waitForFunction(() => (window).__done === true, null, { timeout: 300000 });
+  await page.waitForTimeout(300);
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  await page.screenshot({ path: out, fullPage: true });
+  console.log('page ->', out);
+} else if (mode === 'stickers') {
   await page.goto(`${base}/scripts/storybook/preview.html${q}`);
   await page.waitForFunction(() => document.querySelectorAll('#g img').length > 0 && [...document.images].every((i) => i.complete));
   await page.waitForTimeout(300);

@@ -7,16 +7,18 @@
 </style>
 <div id="g"></div>
 <script type="module">
-  // Dựng tranh thật (composeScene) để render.mjs chụp PNG: ?mode=scenes|builder&only=id1,id2
+  // Dựng tranh thật (composeScene) để render.mjs chụp PNG: ?mode=scenes|builder|manifest&only=id1,id2
   import { BUILT_IN_ARTWORKS } from '/src/data/BuiltInArtworks.ts';
   import { HEROES } from '/src/builder/SceneDecisionTree.ts';
   import { recipeToArtwork } from '/src/builder/ProgressiveSceneComposer.ts';
+  import { loadManifestArtworks } from '/src/data/ArtworkManifest.ts';
 
   const qs = new URLSearchParams(location.search);
   const mode = qs.get('mode') || 'scenes';
   const only = qs.get('only')?.split(',');
   const jobs = [];
   if (mode === 'scenes') for (const a of BUILT_IN_ARTWORKS) jobs.push([a.id, a]);
+  else if (mode === 'manifest') for (const a of await loadManifestArtworks()) jobs.push([a.id, a]);
   else if (qs.get('full'))
     // mọi tổ hợp bé có thể chọn: nhân vật x bạn đồng hành x nền x khổ giấy (seed đổi theo tổ hợp)
     for (const hero of HEROES)

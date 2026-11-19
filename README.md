@@ -81,6 +81,10 @@ Với mỗi hình SVG trong một bức tranh:
 ## Tài nguyên và giấy phép
 
 - **Bộ hình sách tranh** (`public/svg/story/`): vẽ riêng cho dự án bằng `scripts/storybook/`. Quy trình tự render–tự phê bình học theo các skill minh hoạ trong `.claude/skills/` (MengTo/Skills, coloring-book-skill, niyam-notionaly — MIT); dáng đứng của bạn nhỏ tham khảo bộ humaaans (CC BY 4.0, Pablo Stanley) nhưng vẽ lại hoàn toàn, không dùng vector gốc.
+- **Hình hoạ sĩ** (`public/svg/artist/`, chi tiết trong `public/svg/artist/NOTICE.md`): chuyển thành nét tô màu bằng `src/engine/SvgLineArtConverter.ts`.
+  - Mega Doodles Pack © Maria Letta — CC BY-SA 4.0; các bản chuyển thể phát hành theo cùng giấy phép.
+  - Free Gophers Pack © Maria Letta — CC0 1.0 (kể cả hai tranh mẫu trong `public/artworks/`).
+  - IRA Design © Creative Tim — MIT.
 - **Noto Emoji** © Google, Apache License 2.0 (`public/svg/noto/`): không còn dùng trong tranh mẫu, giữ lại để tương thích.
 - **OpenMoji** (openmoji.org), CC BY-SA 4.0: icon giao diện (`src/assets/icons/`) và mây, bong bóng (`public/svg/openmoji/`). Giấy phép này yêu cầu ghi công và chia sẻ bản chỉnh sửa theo cùng giấy phép; lời ghi công có trong Góc phụ huynh.
 - **anime.js** (MIT), **canvas-confetti** (ISC), **panzoom** (MIT), **interact.js** (MIT), **svg.js** (MIT), **potpack** (ISC): cài qua npm.
@@ -121,6 +125,12 @@ scene('s-jungle', 'Rừng xanh', 'Jungle', JUNGLE);
 
 `x, y` là tâm hình trên khung 1600×1200, `size` là cạnh khung vuông của hình, `rot`/`flip` để xoay/lật, `anim` (`breathe`, `drift`, `spin`, `sway`, `flutter`, `hop`) là kiểu chuyển động trong chế độ Thức Giấc. Hình có mặt (mắt, mũi) nên đặt `size` ≥ 230 để mọi mảng tô ≥ 25px.
 
+### Hình của hoạ sĩ & tranh thả vào
+
+- **Hình rời cho tranh ghép** (`'a:<tên>'`): khai báo nguồn trong `scripts/artists/catalog.json` (thư mục trong `.refs/`, file, giấy phép), rồi chạy `node scripts/artists/convert.mjs` (cần dev server). Bộ chuyển đổi đổi mảng màu thành nền trắng, giữ nét vẽ dạng dải và con ngươi/mũi bằng mực, đổi khối tối lớn (tóc, giày) thành mảng trắng có viền, bỏ bóng đổ và chi tiết < 22px, thêm đường bao ngoài dày (4) trên nét trong mảnh (2.2); svgo dọn mã và `NOTICE.md` được ghi kèm.
+- **Tranh cả trang**: thả SVG vào `public/artworks/` và khai báo trong `public/artworks/manifest.json` (xem README trong thư mục đó) — tranh tự chuyển thành nét tô màu khi mở và hiện trong phòng tranh.
+- Luật bố cục tranh mẫu: 1 nhân vật chính lớn (~60% chiều cao) + 1 bạn đồng hành nhỏ hơn quay về nhau; nền chỉ 2–3 đường đồi + 1–2 đám mây khác dáng.
+
 ### Kiểm tra thị giác (render headless)
 
 Khi dev server đang chạy (`npm run dev`), cần `playwright-core` + Chromium:
@@ -129,6 +139,8 @@ Khi dev server đang chạy (`npm run dev`), cần `playwright-core` + Chromium:
 node scripts/storybook/render.mjs stickers out/stickers.png   # bảng hình + lint quy chuẩn nét (fill, stroke, mảng quá nhỏ)
 node scripts/storybook/render.mjs scenes out/scenes            # mỗi tranh mẫu một PNG, vùng tô < 25px khoanh đỏ
 node scripts/storybook/render.mjs builder out/builder          # 27 tổ hợp của Xưởng Phép Thuật
+node scripts/storybook/render.mjs full out/full                # đủ 162 tổ hợp Xưởng (nhân vật x bạn x nền x khổ giấy)
+node scripts/storybook/render.mjs manifest out/manifest        # các tranh thả vào public/artworks/
 ```
 
 Thêm `--url http://localhost:5174` nếu Vite chạy ở cổng khác, `--only a,b` để lọc, `--px 330` để phóng to bảng hình.

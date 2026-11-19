@@ -1,0 +1,48 @@
+{
+  "sources": {
+    "doodles": {
+      "dir": ".refs/MariaLetta/mega-doodles-pack/doodles/svg",
+      "repo": "https://github.com/MariaLetta/mega-doodles-pack",
+      "author": "Maria Letta",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/"
+    },
+    "gophers": {
+      "dir": ".refs/MariaLetta/free-gophers-pack/characters/svg",
+      "repo": "https://github.com/MariaLetta/free-gophers-pack",
+      "author": "Maria Letta",
+      "license": "CC0 1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/"
+    },
+    "ira": {
+      "dir": ".refs/ira-illustrations/x/SVG/Outline/Objects",
+      "repo": "https://github.com/ira-design/ira-illustrations",
+      "author": "Creative Tim (IRA Design)",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/creativetimofficial/ira-design/blob/master/LICENSE.md"
+    }
+  },
+  "items": [
+    { "id": "cat", "source": "doodles", "file": "doodle-01.svg", "vi": "Mèo đeo kính" },
+    { "id": "chick", "source": "doodles", "file": "doodle-12.svg", "vi": "Gà con" },
+    { "id": "mushroom", "source": "doodles", "file": "doodle-18.svg", "vi": "Nấm" },
+    { "id": "fox", "source": "doodles", "file": "doodle-25.svg", "vi": "Cáo" },
+    { "id": "frog", "source": "doodles", "file": "doodle-31.svg", "vi": "Ếch" },
+    { "id": "rocket", "source": "doodles", "file": "doodle-34.svg", "vi": "Tên lửa" },
+    { "id": "narwhal", "source": "doodles", "file": "doodle-36.svg", "vi": "Kỳ lân biển" },
+    { "id": "octopus", "source": "doodles", "file": "doodle-38.svg", "vi": "Bạch tuộc" },
+    { "id": "ufo", "source": "doodles", "file": "doodle-57.svg", "vi": "Đĩa bay" },
+    { "id": "hedgehog", "source": "doodles", "file": "doodle-62.svg", "vi": "Nhím" },
+    { "id": "dog", "source": "doodles", "file": "doodle-76.svg", "vi": "Cún" },
+    { "id": "cow", "source": "doodles", "file": "doodle-78.svg", "vi": "Bò sữa" },
+    { "id": "donut", "source": "doodles", "file": "doodle-85.svg", "vi": "Bánh vòng" },
+    { "id": "lollipop", "source": "doodles", "file": "doodle-88.svg", "vi": "Kẹo mút" },
+    { "id": "raccoon", "source": "doodles", "file": "doodle-115.svg", "vi": "Gấu mèo" },
+    { "id": "cupcake", "source": "doodles", "file": "doodle-123.svg", "vi": "Bánh cupcake" },
+    { "id": "rainbow", "source": "doodles", "file": "doodle-124.svg", "vi": "Cầu vồng" },
+    { "id": "cherries", "source": "doodles", "file": "doodle-130.svg", "vi": "Anh đào" },
+    { "id": "gopher_balloons", "source": "gophers", "file": "36.svg", "vi": "Chuột chũi cầm bóng bay" },
+    { "id": "gopher_umbrella", "source": "gophers", "file": "43.svg", "vi": "Chuột chũi che ô" },
+    { "id": "plant", "source": "ira", "file": "flower.svg", "vi": "Chậu cây" }
+  ]
+}

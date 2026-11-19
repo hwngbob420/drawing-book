@@ -1,4 +1,5 @@
 import { AnimKind, AnimPart, ART_W, ART_H, makeCanvas, ctx2d } from '../types';
+import { INNER_W, OUTER_W } from './SvgLineArtConverter';
 
 /**
  * SceneComposer — Bộ Ghép Tranh Vector.
@@ -140,7 +141,26 @@ export function svgUrl(src: string): string {
     return u;
   }
   const [kind, code] = src.split(':');
-  return `${import.meta.env.BASE_URL}svg/${kind === 's' ? 'story' : kind === 'n' ? 'noto' : 'openmoji'}/${code}.svg`;
+  const dir = { s: 'story', a: 'artist', n: 'noto', o: 'openmoji' }[kind] ?? 'openmoji';
+  return `${import.meta.env.BASE_URL}svg/${dir}/${code}.svg`;
+}
+
+/**
+ * Ảnh thẻ (phòng tranh, thẻ chọn ở Xưởng) cho một hình. Hình hoạ sĩ ('a:') dùng nét non-scaling-stroke tính
+ * bằng px, nên được dựng lại theo cỡ hiển thị `px` để nét không đậm hơn hình tự vẽ bên cạnh.
+ */
+export function svgImg(src: string, px = 160, attrs: Record<string, string> = {}): HTMLImageElement {
+  const img = document.createElement('img');
+  img.alt = '';
+  img.draggable = false;
+  for (const [k, v] of Object.entries(attrs)) img.setAttribute(k, v);
+  if (!src.startsWith('a:')) img.src = svgUrl(src);
+  else
+    void loadSvgText(src).then((text) => {
+      const svg = normalizeSvg(text, src, px, Math.max(1.2, px * 0.018));
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    });
+  return img;
 }
 
 export function loadSvgText(src: string): Promise<string> {
@@ -175,6 +195,7 @@ export function normalizeSvg(text: string, src: string, size: number, strokePx: 
   const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
   const svg = document.importNode(doc.documentElement, true) as unknown as SVGSVGElement;
   if (svg.nodeName !== 'svg') throw new Error('SVG lỗi: ' + src);
+  if (src.startsWith('a:')) return normalizeArtist(svg, size, strokePx);
   const vb = (svg.getAttribute('viewBox') || '0 0 128 128').split(/[\s,]+/).map(Number);
   const unit = vb[2] || 128;
   const sw = ((strokePx * unit) / size).toFixed(2);
@@ -207,8 +228,8 @@ export function normalizeSvg(text: string, src: string, size: number, strokePx: 
       plan.push([el, fill]);
     });
     for (const [el, fill] of plan) {
-      // Sách tranh: nét ngoài 3.5, nét chia mảng 2.5 -> giữ tỉ lệ so với nét ngoài
-      const ratio = story ? Math.max(0.2, (parseFloat(el.getAttribute('stroke-width') || '3.5') || 3.5) / 3.5) : 1;
+      // Sách tranh: nét ngoài 4, nét chia mảng 2.2 (như hình hoạ sĩ) -> giữ tỉ lệ so với nét ngoài
+      const ratio = story ? Math.max(0.2, (parseFloat(el.getAttribute('stroke-width') || String(OUTER_W)) || OUTER_W) / OUTER_W) : 1;
       const w = story ? (+sw * ratio).toFixed(2) : sw;
       if (fill === null) el.remove();
       else el.setAttribute('style', `fill:${fill};stroke:${INK};stroke-width:${w};stroke-linecap:round;stroke-linejoin:round;opacity:1;fill-opacity:1;stroke-opacity:1`);
@@ -223,6 +244,22 @@ export function normalizeSvg(text: string, src: string, size: number, strokePx: 
   svg.setAttribute('width', String(size));
   svg.setAttribute('height', String(size));
   svg.removeAttribute('style');
+  return new XMLSerializer().serializeToString(svg);
+}
+
+/**
+ * Hình hoạ sĩ đã qua SvgLineArtConverter ('a:'): nét non-scaling-stroke, độ dày theo vai trò
+ * (`under` = đường bao ngoài, gấp đôi vì nửa trong bị mảng trắng che; `inner` = nét chia mảng mảnh).
+ */
+function normalizeArtist(svg: SVGSVGElement, size: number, strokePx: number): string {
+  const inner = ((strokePx * INNER_W) / OUTER_W).toFixed(2);
+  svg.querySelectorAll<SVGElement>('[data-role]').forEach((el) => {
+    const role = el.getAttribute('data-role');
+    if (role === 'under') el.setAttribute('stroke-width', (strokePx * 2).toFixed(2));
+    else if (role === 'inner') el.setAttribute('stroke-width', inner);
+  });
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
   return new XMLSerializer().serializeToString(svg);
 }
 
@@ -345,6 +382,36 @@ export async function composeScene(layers: SceneLayer[], w = ART_W, h = ART_H): 
     c.drawImage(r.ink, -half, -half);
     c.restore();
   });
+  canvas.dataset.sealed = String(sealTinyRegions(canvas));
+  return canvas;
+}
+
+/**
+ * Tranh cả trang đã chuyển nét (SvgLineArtConverter, chế độ `page`) -> lớp nét mực w x h:
+ * co vừa khung, giữ tỉ lệ, căn giữa; độ tối -> alpha như các hình ghép; lấp khe < MIN_REGION_PX.
+ */
+export async function composeLineArt(svg: string, w = ART_W, h = ART_H): Promise<HTMLCanvasElement> {
+  const vb = (svg.match(/viewBox="([^"]+)"/)?.[1] || `0 0 ${w} ${h}`).split(/[\s,]+/).map(Number);
+  const k = Math.min(w / vb[2], h / vb[3]);
+  const dw = Math.round(vb[2] * k);
+  const dh = Math.round(vb[3] * k);
+  // nét non-scaling-stroke tính theo px ở cạnh dài gốc: đặt width/height = đúng kích thước dựng
+  const sized = svg.replace(/<svg /, `<svg width="${dw}" height="${dh}" `);
+  const img = await svgToImage(sized);
+  const canvas = makeCanvas(w, h);
+  const c = ctx2d(canvas, true);
+  c.drawImage(img, Math.round((w - dw) / 2), Math.round((h - dh) / 2), dw, dh);
+  const data = c.getImageData(0, 0, w, h);
+  const d = data.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const lum = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11;
+    const a = Math.round((d[i + 3] * (255 - lum)) / INK_SPAN);
+    d[i] = INK_R;
+    d[i + 1] = INK_G;
+    d[i + 2] = INK_B;
+    d[i + 3] = a > 255 ? 255 : a;
+  }
+  c.putImageData(data, 0, 0);
   canvas.dataset.sealed = String(sealTinyRegions(canvas));
   return canvas;
 }

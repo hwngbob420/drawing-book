@@ -17,7 +17,7 @@ export interface Progress {
  * nét vẽ cũ, nên khi vẽ lại bộ hình phải tăng số này: tiến độ cũ bị bỏ qua thay vì đổ màu lệch
  * lên nét mới. Tranh phụ huynh tải lên (`upload-`) không đổi nét nên luôn giữ tiến độ.
  */
-export const ART_VERSION = 2;
+export const ART_VERSION = 3;
 const current = (p: Progress | undefined) => (p && (p.id.startsWith('upload-') || p.art === ART_VERSION) ? p : undefined);
 
 /** Tranh bé tự ghép ở Xưởng Phép Thuật: chỉ lưu "công thức", tranh được dựng lại khi mở. */

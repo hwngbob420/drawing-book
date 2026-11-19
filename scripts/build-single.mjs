@@ -12,10 +12,11 @@ const js = fs.readFileSync(path.join(dist, 'assets', assets.find((f) => f.endsWi
 const css = fs.readFileSync(path.join(dist, 'assets', assets.find((f) => f.endsWith('.css'))), 'utf8');
 
 const svgs = {};
-// chỉ nhúng bộ hình sách tranh — tranh mẫu và Xưởng Phép Thuật không còn dùng Noto/OpenMoji
-for (const [dir, prefix] of [['story', 's:']]) {
+// nhúng bộ hình sách tranh tự vẽ + hình hoạ sĩ đã chuyển nét — tranh mẫu và Xưởng không còn dùng Noto/OpenMoji
+for (const [dir, prefix] of [['story', 's:'], ['artist', 'a:']]) {
   if (!fs.existsSync(path.join(root, 'public/svg', dir))) continue;
   for (const f of fs.readdirSync(path.join(root, 'public/svg', dir))) {
+    if (!f.endsWith('.svg')) continue;
     svgs[prefix + f.replace('.svg', '')] = fs.readFileSync(path.join(root, 'public/svg', dir, f), 'utf8');
   }
 }
@@ -23,13 +24,26 @@ for (const [dir, prefix] of [['story', 's:']]) {
 const safe = (s) => s.replace(/<\/(script)/gi, '<\\/$1').replace(/<!--/g, '<\\!--');
 const data = safe(JSON.stringify(svgs));
 
+// tranh thả vào public/artworks/: manifest + nội dung từng file (mở bằng file:// không fetch được)
+const artDir = path.join(root, 'public/artworks');
+let artworks = { manifest: { artworks: [] }, files: {} };
+if (fs.existsSync(path.join(artDir, 'manifest.json'))) {
+  artworks.manifest = JSON.parse(fs.readFileSync(path.join(artDir, 'manifest.json'), 'utf8'));
+  for (const en of artworks.manifest.artworks || []) {
+    const f = path.join(artDir, en.file);
+    if (fs.existsSync(f)) artworks.files[en.file] = fs.readFileSync(f, 'utf8');
+    else console.warn('Thiếu', en.file, '(bỏ qua)');
+  }
+}
+const artData = safe(JSON.stringify(artworks));
+
 const head = `<title>Sách Tô Màu Phép Thuật</title>
 <meta name="theme-color" content="#ffd166" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <style>${css}</style>`;
 const body = `<div id="app"></div>
-<script>window.__MCB_SVG__=${data};</script>
+<script>window.__MCB_SVG__=${data};window.__MCB_ARTWORKS__=${artData};</script>
 <script type="module">${safe(js)}</script>`;
 
 fs.mkdirSync(path.join(root, 'dist-single'), { recursive: true });

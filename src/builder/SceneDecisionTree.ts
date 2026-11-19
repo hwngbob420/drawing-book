@@ -3,7 +3,7 @@ import { AnimKind } from '../types';
 /**
  * SceneDecisionTree — cây gợi ý 3 x 3 x 3 cho Xưởng Phép Thuật.
  * Bước 1: 3 nhóm (bé trai / bé gái / trung tính), mỗi nhóm 3 "ngôi sao chính".
- * Bước 2: mỗi ngôi sao có đúng 3 bạn đồng hành ăn nhập.
+ * Bước 2: mỗi ngôi sao có đúng 3 bạn đồng hành ăn nhập — mỗi bạn là MỘT hình (luật 1 chính – 1 phụ).
  * Bước 3: mỗi ngôi sao có 3 không gian nền phù hợp.
  * Nguồn hình: 's:<tên>' = bộ hình sách tranh tự vẽ (public/svg/story, sinh bằng: node scripts/storybook/index.mjs).
  */
@@ -61,7 +61,7 @@ export const HEROES: Hero[] = [
     svgs: [{ s: 's:trex', anim: 'hop' }],
     companions: [
       one('volcano', 'Núi lửa', 'Volcano', 's:volcano'),
-      { id: 'eggs', vi: 'Trứng nở', en: 'Hatching eggs', svgs: [{ s: 's:chick2', anim: 'hop' }, { s: 's:egg', rel: 0.7, anim: 'hop' }] },
+      one('eggs', 'Trứng nở', 'Hatching egg', 's:chick2', { anim: 'hop' }),
       one('dragon', 'Thằn lằn bay', 'Flying lizard', 's:dragon', { sky: true, anim: 'drift' }),
     ],
     backdrops: ['forest', 'meadow', 'night'],
@@ -71,12 +71,12 @@ export const HEROES: Hero[] = [
     id: 'rocket',
     vi: 'Tên lửa',
     en: 'Rocket',
-    svgs: [{ s: 's:rocket', anim: 'hop' }],
+    svgs: [{ s: 'a:rocket', anim: 'hop' }],
     sky: true,
     companions: [
       one('astronaut', 'Phi hành gia', 'Astronaut', 's:astronaut', { sky: true, anim: 'drift' }),
       one('saturn', 'Sao Thổ', 'Saturn', 's:planet', { sky: true, anim: 'spin' }),
-      one('ufo', 'Đĩa bay', 'UFO', 's:ufo', { sky: true, anim: 'drift' }),
+      one('ufo', 'Đĩa bay', 'UFO', 'a:ufo', { sky: true, anim: 'drift' }),
     ],
     backdrops: ['night', 'city', 'meadow'],
   },
@@ -88,8 +88,8 @@ export const HEROES: Hero[] = [
     svgs: [{ s: 's:firetruck', anim: 'hop' }],
     companions: [
       one('heli', 'Trực thăng', 'Helicopter', 's:helicopter', { sky: true, anim: 'drift' }),
-      { id: 'firedog', vi: 'Cún cứu hoả', en: 'Fire dog', svgs: [{ s: 's:puppy', anim: 'breathe', hat: { s: 's:helmet', rel: 0.62, dx: 0, dy: -0.4 } }] },
-      { id: 'signs', vi: 'Đèn giao thông', en: 'Traffic light', svgs: [{ s: 's:trafficlight' }, { s: 's:stopsign', rel: 0.6 }] },
+      one('firedog', 'Cún con', 'Puppy', 'a:dog', { anim: 'breathe' }),
+      one('signs', 'Đèn giao thông', 'Traffic light', 's:trafficlight'),
     ],
     backdrops: ['city', 'meadow', 'forest'],
   },
@@ -102,8 +102,8 @@ export const HEROES: Hero[] = [
     svgs: [{ s: 's:unicorn', anim: 'breathe' }],
     companions: [
       one('castle', 'Lâu đài', 'Castle', 's:castle'),
-      { id: 'rainbow', vi: 'Cầu vồng', en: 'Rainbow', sky: true, svgs: [{ s: 's:rainbow' }, { s: 's:cloud', rel: 0.55, anim: 'drift' }] },
-      { id: 'mushrooms', vi: 'Nấm thần tiên', en: 'Fairy mushrooms', svgs: [{ s: 's:mushroom', anim: 'hop' }, { s: 's:mushroom', rel: 0.62, anim: 'hop' }] },
+      one('rainbow', 'Cầu vồng', 'Rainbow', 'a:rainbow', { sky: true }),
+      one('mushrooms', 'Nấm thần tiên', 'Fairy mushroom', 'a:mushroom', { anim: 'hop' }),
     ],
     backdrops: ['meadow', 'night', 'forest'],
   },
@@ -116,8 +116,8 @@ export const HEROES: Hero[] = [
     sky: true,
     companions: [
       one('bigflower', 'Bông hoa lớn', 'Giant flower', 's:flower', { anim: 'sway' }),
-      { id: 'butterflies', vi: 'Đàn bướm', en: 'Butterflies', sky: true, svgs: [{ s: 's:butterfly', anim: 'flutter' }, { s: 's:butterfly', rel: 0.8, anim: 'flutter' }, { s: 's:butterfly', rel: 0.7, anim: 'flutter' }] },
-      { id: 'wand', vi: 'Đũa phép', en: 'Magic wand', sky: true, svgs: [{ s: 's:wand', anim: 'sway' }, { s: 's:twinkle', rel: 0.5, anim: 'breathe' }] },
+      one('butterflies', 'Bạn bướm', 'Butterfly', 's:butterfly', { sky: true, anim: 'flutter' }),
+      one('wand', 'Đũa phép', 'Magic wand', 's:wand', { sky: true, anim: 'sway' }),
     ],
     backdrops: ['meadow', 'forest', 'night'],
   },
@@ -128,9 +128,9 @@ export const HEROES: Hero[] = [
     en: 'Queen kitty',
     svgs: [{ s: 's:cat', anim: 'breathe', hat: { s: 's:crown', rel: 0.55, dx: 0, dy: -0.52 } }],
     companions: [
-      one('cake', 'Bánh kem', 'Birthday cake', 's:cake'),
-      { id: 'yarn', vi: 'Cuộn len & cá', en: 'Yarn & fish', svgs: [{ s: 's:yarn', anim: 'spin' }, { s: 's:fish', rel: 0.7, anim: 'hop' }] },
-      { id: 'pumpkin', vi: 'Xe bí ngô', en: 'Pumpkin coach', svgs: [{ s: 's:pumpkin' }, { s: 's:horse', rel: 0.95, anim: 'hop' }] },
+      one('cake', 'Bánh cupcake', 'Cupcake', 'a:cupcake'),
+      one('yarn', 'Cuộn len', 'Yarn ball', 's:yarn', { anim: 'spin' }),
+      one('pumpkin', 'Xe bí ngô', 'Pumpkin coach', 's:pumpkin'),
     ],
     backdrops: ['meadow', 'night', 'forest'],
   },
@@ -140,11 +140,11 @@ export const HEROES: Hero[] = [
     id: 'puppy',
     vi: 'Cún con',
     en: 'Puppy',
-    svgs: [{ s: 's:puppy', anim: 'breathe' }],
+    svgs: [{ s: 'a:dog', anim: 'breathe' }],
     companions: [
-      { id: 'house', vi: 'Nhà & khúc xương', en: 'House & bone', svgs: [{ s: 's:house' }, { s: 's:bone', rel: 0.4, anim: 'hop' }] },
-      { id: 'birds', vi: 'Bướm & chim', en: 'Butterfly & bird', sky: true, svgs: [{ s: 's:bird', anim: 'hop' }, { s: 's:butterfly', rel: 0.75, anim: 'flutter' }] },
-      { id: 'ball', vi: 'Bóng & cầu vồng', en: 'Ball & rainbow', svgs: [{ s: 's:rainbow' }, { s: 's:ball', rel: 0.45, anim: 'hop' }] },
+      one('house', 'Ngôi nhà', 'House', 's:house'),
+      one('birds', 'Gà con', 'Chick', 'a:chick', { anim: 'hop' }),
+      one('ball', 'Quả bóng', 'Ball', 's:ball', { anim: 'hop' }),
     ],
     backdrops: ['meadow', 'forest', 'city'],
   },
@@ -156,9 +156,9 @@ export const HEROES: Hero[] = [
     svgs: [{ s: 's:dolphin', anim: 'hop' }],
     sky: true,
     companions: [
-      { id: 'turtle', vi: 'Rùa & bạch tuộc', en: 'Turtle & octopus', svgs: [{ s: 's:turtle', anim: 'drift' }, { s: 's:octopus', rel: 0.85, anim: 'breathe' }] },
+      one('turtle', 'Bạch tuộc', 'Octopus', 'a:octopus', { anim: 'breathe' }),
       { id: 'ship', vi: 'Tàu khám phá', en: 'Explorer ship', sky: true, svgs: [{ s: 's:ship', anim: 'drift' }] },
-      { id: 'reef', vi: 'San hô & vỏ sò', en: 'Coral & shell', svgs: [{ s: 's:coral', anim: 'sway' }, { s: 's:shell', rel: 0.55 }, { s: 's:crab', rel: 0.65, anim: 'hop' }] },
+      one('reef', 'Kỳ lân biển', 'Narwhal', 'a:narwhal', { anim: 'drift' }),
     ],
     backdrops: ['sea', 'beach', 'night'],
   },
@@ -169,9 +169,9 @@ export const HEROES: Hero[] = [
     en: 'Panda',
     svgs: [{ s: 's:panda', anim: 'breathe' }],
     companions: [
-      { id: 'balloons', vi: 'Bóng bay', en: 'Balloons', sky: true, svgs: [{ s: 's:balloon', anim: 'sway' }, { s: 's:balloon', rel: 0.75, anim: 'sway' }] },
-      { id: 'bamboo', vi: 'Tre & chim', en: 'Bamboo & bird', svgs: [{ s: 's:bamboo' }, { s: 's:bird', rel: 0.55, anim: 'hop' }] },
-      { id: 'treats', vi: 'Kem & bánh', en: 'Ice cream & cake', svgs: [{ s: 's:icecream', anim: 'sway' }, { s: 's:cupcake', rel: 0.75 }] },
+      one('balloons', 'Bóng bay', 'Balloon', 's:balloon', { sky: true, anim: 'sway' }),
+      one('bamboo', 'Gấu mèo', 'Raccoon', 'a:raccoon', { anim: 'breathe' }),
+      one('treats', 'Bánh vòng', 'Donut', 'a:donut', { anim: 'spin' }),
     ],
     backdrops: ['forest', 'meadow', 'night'],
   },
