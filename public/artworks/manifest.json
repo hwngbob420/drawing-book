@@ -1,6 +1,1 @@
-{
-  "artworks": [
-    { "id": "gopher-whale", "file": "gopher-whale.svg", "title": "Cưỡi cá voi", "titleEn": "Whale Ride", "version": 1, "orient": "l" },
-    { "id": "gopher-panda", "file": "gopher-panda.svg", "title": "Ôm bạn gấu trúc", "titleEn": "Panda Hug", "version": 1, "orient": "l" }
-  ]
-}
+{ "artworks": [] }

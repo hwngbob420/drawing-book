@@ -7,6 +7,7 @@ import { GalleryView, uploadToArtwork } from './ui/GalleryView';
 import { FullBleedStudioView } from './studio/FullBleedStudioView';
 import { SceneBuilderView } from './builder/SceneBuilderView';
 import { Recipe, recipeToArtwork } from './builder/ProgressiveSceneComposer';
+import { findHero } from './builder/SceneDecisionTree';
 
 /** Khởi tạo app và chuyển cảnh Gallery <-> Xưởng Phép Thuật <-> Studio. */
 const app = document.getElementById('app')!;
@@ -18,7 +19,8 @@ async function reload() {
   const [uploads, customs, dropped] = await Promise.all([Storage.allUploads(), Storage.allCustom(), manifestArtworks]);
   uploads.sort((a, b) => a.created - b.created);
   customs.sort((a, b) => b.created - a.created);
-  artworks = [...customs.map((c) => recipeToArtwork(c.id, c.recipe as Recipe)), ...BUILT_IN_ARTWORKS, ...dropped, ...uploads.map(uploadToArtwork)];
+  artworks = [...// bỏ công thức cũ trỏ tới nhân vật của bộ hình trước (đã thay mới)
+    customs.filter((c) => findHero(c.recipe.hero)).map((c) => recipeToArtwork(c.id, c.recipe as Recipe)), ...BUILT_IN_ARTWORKS, ...dropped, ...uploads.map(uploadToArtwork)];
 }
 
 function showGallery() {

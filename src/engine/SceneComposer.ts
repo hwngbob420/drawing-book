@@ -17,7 +17,7 @@ import { INNER_W, OUTER_W } from './SvgLineArtConverter';
  */
 
 export interface SceneItem {
-  /** 's:<tên>' = hình sách tranh tự vẽ (public/svg/story, sinh bởi scripts/storybook); 'n:' Noto / 'o:' OpenMoji vẫn đọc được. */
+  /** 'g:<tên>' = PNG nét mực do Muse vẽ (public/gen); 's:<tên>' = hình sách tranh tự vẽ (public/svg/story, sinh bởi scripts/storybook); 'n:' Noto / 'o:' OpenMoji vẫn đọc được. */
   s: string;
   x: number;
   y: number;
@@ -135,12 +135,14 @@ const dataUrls = new Map<string, string>();
 
 export function svgUrl(src: string): string {
   const text = embedded()?.[src];
+  if (text && src.startsWith('g:')) return text; // bản một file: PNG nhúng sẵn dạng data URL
   if (text) {
     let u = dataUrls.get(src);
     if (!u) dataUrls.set(src, (u = 'data:image/svg+xml;utf8,' + encodeURIComponent(text)));
     return u;
   }
   const [kind, code] = src.split(':');
+  if (kind === 'g') return `${import.meta.env.BASE_URL}gen/${code}.png`;
   const dir = { s: 'story', a: 'artist', n: 'noto', o: 'openmoji' }[kind] ?? 'openmoji';
   return `${import.meta.env.BASE_URL}svg/${dir}/${code}.svg`;
 }
@@ -154,6 +156,7 @@ export function svgImg(src: string, px = 160, attrs: Record<string, string> = {}
   img.alt = '';
   img.draggable = false;
   for (const [k, v] of Object.entries(attrs)) img.setAttribute(k, v);
+  if (src.startsWith('g:')) img.classList.add('gimg'); // PNG nền trắng: hoà vào nền bằng multiply
   if (!src.startsWith('a:')) img.src = svgUrl(src);
   else
     void loadSvgText(src).then((text) => {
@@ -279,13 +282,46 @@ function svgToImage(svg: string): Promise<HTMLImageElement> {
   });
 }
 
+/** Hình PNG nét mực do Muse vẽ ('g:', public/gen): nền trắng, đã tách nét và căn vuông bằng scripts/gen/process.py. */
+const pngCache = new Map<string, Promise<HTMLImageElement>>();
+function loadPng(src: string): Promise<HTMLImageElement> {
+  let p = pngCache.get(src);
+  if (!p) {
+    p = new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Thiếu PNG ' + src));
+      img.src = svgUrl(src);
+    });
+    pngCache.set(src, p);
+  }
+  return p;
+}
+
 const SIL_GAP = 3;
+
+/** Nới nét: kênh alpha = max trong hình vuông bán kính r (tách hai chiều). */
+function dilateAlpha(d: Uint8ClampedArray, w: number, h: number, r: number) {
+  const tmp = new Uint8Array(w * h);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      let m = 0;
+      for (let k = Math.max(0, x - r); k <= Math.min(w - 1, x + r); k++) m = Math.max(m, d[(y * w + k) * 4 + 3]);
+      tmp[y * w + x] = m;
+    }
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      let m = 0;
+      for (let k = Math.max(0, y - r); k <= Math.min(h - 1, y + r); k++) m = Math.max(m, tmp[k * w + x]);
+      d[(y * w + x) * 4 + 3] = m;
+    }
+}
 
 /** Raster hoá một hình: trả về lớp nét mực trong suốt + mặt nạ bóng của hình. */
 async function rasterize(src: string, size: number): Promise<{ ink: HTMLCanvasElement; sil: HTMLCanvasElement; pad: number }> {
   size = Math.round(size);
   const strokePx = Math.max(5, Math.min(8.5, size * 0.02));
-  const img = await svgToImage(normalizeSvg(await loadSvgText(src), src, size, strokePx));
+  const img = src.startsWith('g:') ? await loadPng(src) : await svgToImage(normalizeSvg(await loadSvgText(src), src, size, strokePx));
   const pad = 14;
   const w = size + pad * 2;
   const ink = makeCanvas(w, w);
@@ -302,8 +338,11 @@ async function rasterize(src: string, size: number): Promise<{ ink: HTMLCanvasEl
     d[i * 4 + 1] = INK_G;
     d[i * 4 + 2] = INK_B;
     d[i * 4 + 3] = a > 255 ? 255 : a;
-    open[i] = a < 110 ? 1 : 0;
   }
+  // PNG của Muse có nét mảnh khi thu nhỏ (chi tiết nền): nới nét theo cỡ để mọi hình có nét dày gần bằng nhau
+  const grow = src.startsWith('g:') ? size < 200 ? 1 : 0 : 0;
+  if (grow > 0) dilateAlpha(d, w, w, grow);
+  for (let i = 0; i < n; i++) open[i] = d[i * 4 + 3] < 110 ? 1 : 0;
   c.putImageData(data, 0, 0);
 
   // bóng của hình: loang "bên ngoài" từ mép, trên bản đồ đã bịt khe hở

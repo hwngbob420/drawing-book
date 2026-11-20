@@ -4,6 +4,7 @@ import { AnimKind, Artwork, Orient, sheetSize } from '../types';
 import { SceneItem, SceneLayer, Pen, composeScene, sceneAnim, loadSvgText, ground, circle, rrect } from '../engine/SceneComposer';
 import { mulberry32 } from '../engine/PatternGenerator';
 import { BackdropId, Piece, PieceSvg, findHero, BACKDROPS } from './SceneDecisionTree';
+import { TEMPLATES } from './LayoutTemplates';
 
 /**
  * ProgressiveSceneComposer — lắp 3 lựa chọn của bé thành một bức tranh.
@@ -42,6 +43,11 @@ const tightCache = new Map<string, Promise<Rect>>();
 
 function measure(src: string): Promise<Rect> {
   let p = tightCache.get(src);
+  if (!p && src.startsWith('g:')) {
+    // PNG của Muse đã được process.py cắt sát hình và căn vuông, chừa lề 4%
+    p = Promise.resolve({ x: 0.04, y: 0.04, w: 0.92, h: 0.92 });
+    tightCache.set(src, p);
+  }
   if (!p) {
     p = loadSvgText(src).then((text) => {
       const host = document.createElement('div');
@@ -197,7 +203,7 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
   };
   // Nền sách tranh "thoáng": 2–3 đường đồi + 1–2 đám mây khác dáng; không mặt trời cười, không hàng hoa dàn ngang.
   const clouds = (n: number): SceneItem[] =>
-    ['s:cloud', 's:cloud2', 's:cloud3']
+    ['g:cloud1', 'g:cloud2']
       .sort(() => rnd() - 0.5)
       .slice(0, n)
       .map((s, i) => ({ s, x: sx(i ? 0.24 + rnd() * 0.1 : 0.78 - rnd() * 0.1), y: h * ((portrait ? 0.07 : 0.11) + rnd() * 0.06), size: (230 + rnd() * 70) * u, anim: 'drift' as AnimKind }));
@@ -216,8 +222,8 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
           ...clouds(1),
           (p) => p.shape(hill(w, h, far, 46 * u, ph)),
           // rừng = hai cây khác dáng ở xa, hai bên khung (không lặp một hình)
-          { s: rnd() < 0.5 ? 's:tree2' : 's:tree3', x: w * 0.1, y: far - 120 * u, size: 460 * u, anim: 'sway' },
-          { s: 's:pine', x: w * 0.9, y: far - 100 * u, size: 400 * u, anim: 'sway' },
+          { s: 'g:tree', x: w * 0.1, y: far - 120 * u, size: 460 * u, anim: 'sway' },
+          { s: 'g:tree', flip: true, x: w * 0.9, y: far - 100 * u, size: 400 * u, anim: 'sway' },
           (p) => p.shape(hill(w, h, near, 40 * u, ph + 2)),
         ],
         props: [],
@@ -230,12 +236,12 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
       for (let i = 0; i < cols; i++) {
         const cx = ((i % cols) + 0.5) / cols + (rnd() - 0.5) * 0.1;
         const cy = (portrait ? 0.06 : 0.08) + Math.floor(i / cols) * (portrait ? 0.17 : 0.2) + rnd() * 0.06;
-        stars.push({ s: 's:twinkle', x: cx * w, y: cy * h, size: (110 + rnd() * 70) * u, rot: (rnd() - 0.5) * 0.8, anim: 'breathe', amp: 0.12, speed: 4 + rnd() * 2 });
+        stars.push({ s: 'g:star', x: cx * w, y: cy * h, size: (110 + rnd() * 70) * u, rot: (rnd() - 0.5) * 0.8, anim: 'breathe', amp: 0.12, speed: 4 + rnd() * 2 });
       }
       return {
         back: [(p) => p.shape(hill(w, h, near + 30 * u, 50 * u, ph))],
         // trăng đứng đầu danh sách để các ngôi sao tự tránh nó
-        props: [{ s: 's:moon', x: sx(0.86), y: h * (portrait ? 0.09 : 0.15), size: 300 * u, anim: 'sway' }, ...stars],
+        props: [{ s: 'g:moon', x: sx(0.86), y: h * (portrait ? 0.09 : 0.15), size: 300 * u, anim: 'sway' }, ...stars],
         groundY: near + (h - near) * 0.5,
         farY: near + 40 * u,
       };
@@ -249,8 +255,8 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
           },
         ],
         props: [
-          { s: 's:seaweed', x: w * 0.9, y: h * 0.82, size: 340 * u, anim: 'sway' },
-          it('s:bubble', 0.14, 0.12, 190, 'hop'),
+          { s: 'g:flower', x: w * 0.9, y: h * 0.82, size: 340 * u, anim: 'sway' },
+          it('g:balloon', 0.14, 0.12, 190, 'hop'),
         ],
         groundY: h * 0.9,
         farY: h * 0.88,
@@ -278,7 +284,7 @@ function backdrop(id: BackdropId, w: number, h: number, rnd: () => number): Back
             p.shape(wave);
             p.shape(hill(w, h, sand, 34 * u, ph));
           },
-          { s: 's:palm', x: sx(0.9), y: sand - 150 * u, size: 520 * u, flip: !sunLeft, anim: 'sway' },
+          { s: 'g:tree', x: sx(0.9), y: sand - 150 * u, size: 520 * u, flip: !sunLeft, anim: 'sway' },
         ],
         props: [],
         groundY: sand + (h - sand) * 0.5,
@@ -321,7 +327,11 @@ export async function buildScene(r: Recipe): Promise<{ layers: SceneLayer[]; w: 
   const [w, h] = sheetSize(r.orient);
   const portrait = r.orient === 'p';
   const rnd = mulberry32(r.seed * 7919 + 13);
-  const mirror = rnd() < 0.5;
+  // khung bố cục Codex quyết định phía đứng của nhân vật chính, cỡ và vị trí hai vùng neo
+  const tpls = portrait ? TEMPLATES.portrait : TEMPLATES.landscape;
+  const tpl = tpls[Math.floor(rnd() * tpls.length)];
+  // khổ dọc: khung Codex xếp chồng nhân vật theo chiều dọc nên giữ vùng neo đã tinh chỉnh, chỉ khổ ngang dùng khung Codex
+  const mirror = portrait ? rnd() < 0.5 : tpl.main.x > w / 2;
   const bg = backdrop(r.bg, w, h, rnd);
   const hc = await clusterOf(hero, rnd);
   const cc = await clusterOf(comp, rnd);
@@ -333,12 +343,14 @@ export async function buildScene(r: Recipe): Promise<{ layers: SceneLayer[]; w: 
   const jx = (rnd() - 0.5) * 0.05;
   let hz: { cx: number; zw: number; zh: number };
   let cz: { cx: number; zw: number; zh: number };
+  const zone = (t: { x: number; size: number }, shrink: number) => ({ cx: mirror ? 1 - t.x / w : t.x / w, zw: Math.min(0.7, (t.size / w) * shrink), zh: Math.min(0.66, (t.size / h) * shrink) });
   if (portrait) {
     hz = { cx: 0.46 + jx, zw: 0.74, zh: 0.38 };
     cz = { cx: 0.58 - jx, zw: 0.6, zh: 0.25 };
   } else {
-    hz = { cx: 0.33 + jx, zw: 0.44, zh: 0.66 };
-    cz = { cx: 0.77 - jx * 0.5, zw: 0.32, zh: 0.46 };
+    hz = zone(tpl.main, 0.96);
+    cz = zone(tpl.companion, 0.96);
+    hz.cx += jx * 0.4;
   }
   const X = (f: number) => (mirror ? 1 - f : f) * w;
   const fitK = (c: Cluster, z: { zw: number; zh: number }) => Math.min((z.zw * w) / c.w, (z.zh * h) / c.h);

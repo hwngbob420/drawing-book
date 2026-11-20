@@ -35,12 +35,12 @@ export interface Hero extends Piece {
 }
 
 export const BACKDROPS: Record<BackdropId, { vi: string; en: string; icon: string; tint: string }> = {
-  meadow: { vi: 'Đồng cỏ hoa nắng', en: 'Sunny meadow', icon: 's:sunflower', tint: '#d6f5c6' },
-  night: { vi: 'Bầu trời sao', en: 'Starry night', icon: 's:moon', tint: '#d9d2ff' },
-  sea: { vi: 'Đáy biển', en: 'Under the sea', icon: 's:coral', tint: '#c9ecff' },
-  forest: { vi: 'Khu rừng xanh', en: 'Green forest', icon: 's:tree', tint: '#c9f2d0' },
-  city: { vi: 'Thành phố', en: 'City', icon: 's:building', tint: '#ffe9a8' },
-  beach: { vi: 'Bãi biển', en: 'Beach', icon: 's:wave', tint: '#bfe9ff' },
+  meadow: { vi: 'Đồng cỏ hoa nắng', en: 'Sunny meadow', icon: 'g:flower', tint: '#d6f5c6' },
+  night: { vi: 'Bầu trời sao', en: 'Starry night', icon: 'g:moon', tint: '#d9d2ff' },
+  sea: { vi: 'Đáy biển', en: 'Under the sea', icon: 'g:turtle', tint: '#c9ecff' },
+  forest: { vi: 'Khu rừng xanh', en: 'Green forest', icon: 'g:tree', tint: '#c9f2d0' },
+  city: { vi: 'Thành phố', en: 'City', icon: 'g:house', tint: '#ffe9a8' },
+  beach: { vi: 'Bãi biển', en: 'Beach', icon: 'g:sun', tint: '#bfe9ff' },
 };
 
 const one = (id: string, vi: string, en: string, s: string, extra: Partial<Piece> & { anim?: AnimKind } = {}): Piece => ({
@@ -51,130 +51,38 @@ const one = (id: string, vi: string, en: string, s: string, extra: Partial<Piece
   sky: extra.sky,
 });
 
+const C = {
+  butterfly: () => one('butterfly', 'Bạn bướm', 'Butterfly', 'g:butterfly', { sky: true, anim: 'flutter' }),
+  bird: () => one('bird', 'Chim nhỏ', 'Little bird', 'g:bird', { anim: 'hop' }),
+  hedgehog: () => one('hedgehog', 'Nhím con', 'Hedgehog', 'g:hedgehog', { anim: 'breathe' }),
+  duckling: () => one('duckling', 'Vịt con', 'Duckling', 'g:duckling', { anim: 'hop' }),
+  snail: () => one('snail', 'Ốc sên', 'Snail', 'g:snail', { anim: 'sway' }),
+  ladybug: () => one('ladybug', 'Bọ rùa', 'Ladybug', 'g:ladybug', { anim: 'hop' }),
+  turtle: () => one('turtle', 'Rùa con', 'Turtle', 'g:turtle', { anim: 'breathe' }),
+  frog: () => one('frog', 'Ếch con', 'Frog', 'g:frog', { anim: 'hop' }),
+  flower: () => one('flower', 'Bông hoa lớn', 'Giant flower', 'g:flower', { anim: 'sway' }),
+  tree: () => one('tree', 'Cây táo', 'Apple tree', 'g:tree', { anim: 'sway' }),
+  mushroom: () => one('mushroom', 'Nấm thần tiên', 'Fairy mushroom', 'g:mushroom', { anim: 'hop' }),
+  star: () => one('star', 'Ngôi sao', 'Star', 'g:star', { sky: true, anim: 'breathe' }),
+  moon: () => one('moon', 'Trăng khuyết', 'Moon', 'g:moon', { sky: true, anim: 'sway' }),
+  balloon: () => one('balloon', 'Bóng bay', 'Balloon', 'g:balloon', { sky: true, anim: 'sway' }),
+  rainbow: () => one('rainbow', 'Cầu vồng', 'Rainbow', 'g:rainbow', { sky: true }),
+  house: () => one('house', 'Ngôi nhà', 'House', 'g:house'),
+};
+
 export const HEROES: Hero[] = [
-  // ---------------- Bé trai: phiêu lưu & sức mạnh
-  {
-    group: 'boy',
-    id: 'trex',
-    vi: 'Khủng long',
-    en: 'T-Rex',
-    svgs: [{ s: 's:trex', anim: 'hop' }],
-    companions: [
-      one('volcano', 'Núi lửa', 'Volcano', 's:volcano'),
-      one('eggs', 'Trứng nở', 'Hatching egg', 's:chick2', { anim: 'hop' }),
-      one('dragon', 'Thằn lằn bay', 'Flying lizard', 's:dragon', { sky: true, anim: 'drift' }),
-    ],
-    backdrops: ['forest', 'meadow', 'night'],
-  },
-  {
-    group: 'boy',
-    id: 'rocket',
-    vi: 'Tên lửa',
-    en: 'Rocket',
-    svgs: [{ s: 'a:rocket', anim: 'hop' }],
-    sky: true,
-    companions: [
-      one('astronaut', 'Phi hành gia', 'Astronaut', 's:astronaut', { sky: true, anim: 'drift' }),
-      one('saturn', 'Sao Thổ', 'Saturn', 's:planet', { sky: true, anim: 'spin' }),
-      one('ufo', 'Đĩa bay', 'UFO', 'a:ufo', { sky: true, anim: 'drift' }),
-    ],
-    backdrops: ['night', 'city', 'meadow'],
-  },
-  {
-    group: 'boy',
-    id: 'firetruck',
-    vi: 'Xe cứu hoả',
-    en: 'Fire truck',
-    svgs: [{ s: 's:firetruck', anim: 'hop' }],
-    companions: [
-      one('heli', 'Trực thăng', 'Helicopter', 's:helicopter', { sky: true, anim: 'drift' }),
-      one('firedog', 'Cún con', 'Puppy', 'a:dog', { anim: 'breathe' }),
-      one('signs', 'Đèn giao thông', 'Traffic light', 's:trafficlight'),
-    ],
-    backdrops: ['city', 'meadow', 'forest'],
-  },
-  // ---------------- Bé gái: cổ tích & mộng mơ
-  {
-    group: 'girl',
-    id: 'unicorn',
-    vi: 'Kỳ lân',
-    en: 'Unicorn',
-    svgs: [{ s: 's:unicorn', anim: 'breathe' }],
-    companions: [
-      one('castle', 'Lâu đài', 'Castle', 's:castle'),
-      one('rainbow', 'Cầu vồng', 'Rainbow', 'a:rainbow', { sky: true }),
-      one('mushrooms', 'Nấm thần tiên', 'Fairy mushroom', 'a:mushroom', { anim: 'hop' }),
-    ],
-    backdrops: ['meadow', 'night', 'forest'],
-  },
-  {
-    group: 'girl',
-    id: 'fairy',
-    vi: 'Nàng tiên',
-    en: 'Fairy',
-    svgs: [{ s: 's:fairy', anim: 'drift' }],
-    sky: true,
-    companions: [
-      one('bigflower', 'Bông hoa lớn', 'Giant flower', 's:flower', { anim: 'sway' }),
-      one('butterflies', 'Bạn bướm', 'Butterfly', 's:butterfly', { sky: true, anim: 'flutter' }),
-      one('wand', 'Đũa phép', 'Magic wand', 's:wand', { sky: true, anim: 'sway' }),
-    ],
-    backdrops: ['meadow', 'forest', 'night'],
-  },
-  {
-    group: 'girl',
-    id: 'queencat',
-    vi: 'Mèo vương miện',
-    en: 'Queen kitty',
-    svgs: [{ s: 's:cat', anim: 'breathe', hat: { s: 's:crown', rel: 0.55, dx: 0, dy: -0.52 } }],
-    companions: [
-      one('cake', 'Bánh cupcake', 'Cupcake', 'a:cupcake'),
-      one('yarn', 'Cuộn len', 'Yarn ball', 's:yarn', { anim: 'spin' }),
-      one('pumpkin', 'Xe bí ngô', 'Pumpkin coach', 's:pumpkin'),
-    ],
-    backdrops: ['meadow', 'night', 'forest'],
-  },
-  // ---------------- Trung tính: thú cưng & thiên nhiên
-  {
-    group: 'neutral',
-    id: 'puppy',
-    vi: 'Cún con',
-    en: 'Puppy',
-    svgs: [{ s: 'a:dog', anim: 'breathe' }],
-    companions: [
-      one('house', 'Ngôi nhà', 'House', 's:house'),
-      one('birds', 'Gà con', 'Chick', 'a:chick', { anim: 'hop' }),
-      one('ball', 'Quả bóng', 'Ball', 's:ball', { anim: 'hop' }),
-    ],
-    backdrops: ['meadow', 'forest', 'city'],
-  },
-  {
-    group: 'neutral',
-    id: 'dolphin',
-    vi: 'Cá heo',
-    en: 'Dolphin',
-    svgs: [{ s: 's:dolphin', anim: 'hop' }],
-    sky: true,
-    companions: [
-      one('turtle', 'Bạch tuộc', 'Octopus', 'a:octopus', { anim: 'breathe' }),
-      { id: 'ship', vi: 'Tàu khám phá', en: 'Explorer ship', sky: true, svgs: [{ s: 's:ship', anim: 'drift' }] },
-      one('reef', 'Kỳ lân biển', 'Narwhal', 'a:narwhal', { anim: 'drift' }),
-    ],
-    backdrops: ['sea', 'beach', 'night'],
-  },
-  {
-    group: 'neutral',
-    id: 'panda',
-    vi: 'Gấu trúc',
-    en: 'Panda',
-    svgs: [{ s: 's:panda', anim: 'breathe' }],
-    companions: [
-      one('balloons', 'Bóng bay', 'Balloon', 's:balloon', { sky: true, anim: 'sway' }),
-      one('bamboo', 'Gấu mèo', 'Raccoon', 'a:raccoon', { anim: 'breathe' }),
-      one('treats', 'Bánh vòng', 'Donut', 'a:donut', { anim: 'spin' }),
-    ],
-    backdrops: ['forest', 'meadow', 'night'],
-  },
+  // ---------------- Nhóm 1: phiêu lưu
+  { group: 'boy', id: 'dino', vi: 'Khủng long', en: 'Dino', svgs: [{ s: 'g:dino', anim: 'hop' }], companions: [C.turtle(), C.butterfly(), C.mushroom()], backdrops: ['forest', 'meadow', 'night'] },
+  { group: 'boy', id: 'astronaut', vi: 'Phi hành gia', en: 'Astronaut', svgs: [{ s: 'g:astronaut', anim: 'drift' }], sky: true, companions: [C.star(), C.moon(), C.balloon()], backdrops: ['night', 'city', 'meadow'] },
+  { group: 'boy', id: 'elephant', vi: 'Voi con', en: 'Elephant', svgs: [{ s: 'g:elephant', anim: 'breathe' }], companions: [C.balloon(), C.bird(), C.snail()], backdrops: ['meadow', 'beach', 'forest'] },
+  // ---------------- Nhóm 2: cổ tích
+  { group: 'girl', id: 'bunny', vi: 'Thỏ con', en: 'Bunny', svgs: [{ s: 'g:bunny', anim: 'hop' }], companions: [C.ladybug(), C.flower(), C.butterfly()], backdrops: ['meadow', 'forest', 'night'] },
+  { group: 'girl', id: 'kitten', vi: 'Mèo con', en: 'Kitten', svgs: [{ s: 'g:kitten', anim: 'breathe' }], companions: [C.duckling(), C.house(), C.balloon()], backdrops: ['meadow', 'night', 'city'] },
+  { group: 'girl', id: 'fox', vi: 'Cáo con', en: 'Fox', svgs: [{ s: 'g:fox', anim: 'sway' }], companions: [C.hedgehog(), C.tree(), C.bird()], backdrops: ['forest', 'meadow', 'night'] },
+  // ---------------- Nhóm 3: thú cưng & thiên nhiên
+  { group: 'neutral', id: 'puppy', vi: 'Cún con', en: 'Puppy', svgs: [{ s: 'g:puppy', anim: 'breathe' }], companions: [C.house(), C.duckling(), C.balloon()], backdrops: ['meadow', 'forest', 'city'] },
+  { group: 'neutral', id: 'bear', vi: 'Gấu con', en: 'Bear cub', svgs: [{ s: 'g:bear', anim: 'breathe' }], companions: [C.flower(), C.bird(), C.rainbow()], backdrops: ['forest', 'meadow', 'beach'] },
+  { group: 'neutral', id: 'panda', vi: 'Gấu trúc', en: 'Panda', svgs: [{ s: 'g:panda', anim: 'breathe' }], companions: [C.frog(), C.balloon(), C.mushroom()], backdrops: ['forest', 'meadow', 'night'] },
 ];
 
 export const GROUPS: Hero['group'][] = ['boy', 'girl', 'neutral'];

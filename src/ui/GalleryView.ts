@@ -31,7 +31,7 @@ export class GalleryView {
     this.el = h(
       'div',
       { class: 'gallery' },
-      h('header', {}, h('div', { class: 'logo' }, icon('palette'), h('h1', {}, 'Sách Tô Màu', h('em', {}, ' Phép Thuật'))), parentBtn),
+      h('header', {}, h('div', { class: 'logo' }, svgImg('g:fox', 64, { class: 'logo-mascot' }), h('h1', {}, 'Sách Tô Màu', h('em', {}, ' Phép Thuật'))), parentBtn),
       this.grid,
       this.panel,
     );
@@ -45,7 +45,7 @@ export class GalleryView {
     const workshop = h(
       'button',
       { class: 'card clay workshop', 'aria-label': 'Xưởng Phép Thuật — Tự Tạo Tranh' },
-      h('div', { class: 'w-art' }, icon('wand'), ...['s:unicorn', 's:trex', 'a:dog'].map((s) => svgImg(s, 120))),
+      h('div', { class: 'w-art' }, icon('wand'), ...['g:fox', 'g:bunny', 'g:dino'].map((s) => svgImg(s, 120))),
       h('div', { class: 'name' }, 'Xưởng Phép Thuật', h('small', {}, 'Tự tạo tranh')),
     );
     workshop.addEventListener('click', () => {

@@ -13,11 +13,18 @@ const css = fs.readFileSync(path.join(dist, 'assets', assets.find((f) => f.endsW
 
 const svgs = {};
 // nhúng bộ hình sách tranh tự vẽ + hình hoạ sĩ đã chuyển nét — tranh mẫu và Xưởng không còn dùng Noto/OpenMoji
-for (const [dir, prefix] of [['story', 's:'], ['artist', 'a:']]) {
+// (bộ hình vẽ tay cũ 's:' và hình hoạ sĩ 'a:' không còn dùng trong tranh mẫu nên không nhúng nữa)
+for (const [dir, prefix] of []) {
   if (!fs.existsSync(path.join(root, 'public/svg', dir))) continue;
   for (const f of fs.readdirSync(path.join(root, 'public/svg', dir))) {
     if (!f.endsWith('.svg')) continue;
     svgs[prefix + f.replace('.svg', '')] = fs.readFileSync(path.join(root, 'public/svg', dir, f), 'utf8');
+  }
+}
+// PNG nét mực do Muse vẽ (public/gen): nhúng dạng data URL
+if (fs.existsSync(path.join(root, 'public/gen'))) {
+  for (const f of fs.readdirSync(path.join(root, 'public/gen'))) {
+    if (f.endsWith('.png')) svgs['g:' + f.replace('.png', '')] = 'data:image/png;base64,' + fs.readFileSync(path.join(root, 'public/gen', f)).toString('base64');
   }
 }
 // không để chuỗi "</script" hay "<!--" xuất hiện thô trong thẻ <script>
@@ -38,7 +45,7 @@ if (fs.existsSync(path.join(artDir, 'manifest.json'))) {
 const artData = safe(JSON.stringify(artworks));
 
 const head = `<title>Sách Tô Màu Phép Thuật</title>
-<meta name="theme-color" content="#ffd166" />
+<meta name="theme-color" content="#ff7a59" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 <style>${css}</style>`;

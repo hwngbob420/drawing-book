@@ -1,5 +1,7 @@
 import { Artwork, AnimPart, ART_W, ART_H } from '../types';
-import { SceneLayer, Pen, composeScene, sceneAnim, ground, poly } from '../engine/SceneComposer';
+import { SceneLayer, Pen, composeScene, sceneAnim, ground } from '../engine/SceneComposer';
+import { TEMPLATES, Template } from '../builder/LayoutTemplates';
+import { AnimKind } from '../types';
 
 /**
  * Tranh mẫu theo luật bố cục sách tranh "1 chính – 1 phụ – nền thoáng":
@@ -31,118 +33,45 @@ const hills = (...rows: [y: number, amp: number, phase: number][]) => (p: Pen) =
   for (const [y, amp, phase] of rows) p.shape(hill(y, amp, phase));
 };
 
-const PUPPY: SceneLayer[] = [
-  { s: 's:cloud', x: 330, y: 170, size: 300, anim: 'drift' },
-  { s: 's:cloud3', x: 1210, y: 140, size: 240, anim: 'drift', amp: -18 },
-  hills([760, 50, 0.6], [985, 42, 2.4]),
-  { s: 's:butterfly', x: 1190, y: 430, size: 320, rot: 0.22, anim: 'flutter' },
-  { s: 'a:dog', x: 610, y: 700, size: 760, flip: true, anim: 'breathe' },
-];
 
-const BALLOONS: SceneLayer[] = [
-  { s: 's:cloud2', x: 1240, y: 170, size: 280, anim: 'drift' },
-  hills([800, 46, 1.4], [1010, 36, 3.6]),
-  { s: 'a:chick', x: 1220, y: 920, size: 380, anim: 'hop', amp: 14 },
-  { s: 'a:gopher_balloons', x: 620, y: 640, size: 840, anim: 'sway', amp: 6 },
-];
+type Slot = Template['props'][number]['slot'];
+const SLOT_STICKER: Record<Slot, string> = { sun: 'g:sun', cloud: 'g:cloud2', flower: 'g:flower', tree: 'g:tree', star: 'g:star', butterfly: 'g:butterfly', balloon: 'g:balloon' };
+const SLOT_ANIM: Record<Slot, AnimKind> = { sun: 'spin', cloud: 'drift', flower: 'sway', tree: 'sway', star: 'breathe', butterfly: 'flutter', balloon: 'sway' };
 
-const RAIN: SceneLayer[] = [
-  { s: 's:cloud', x: 300, y: 150, size: 280, anim: 'drift' },
-  { s: 's:cloud2', x: 1300, y: 120, size: 260, anim: 'drift', amp: -20 },
-  hills([820, 40, 2.9], [1030, 30, 0.4]),
-  (p) => p.shape(new Path2D('M1000 1090 C1000 1062 1180 1054 1300 1062 C1420 1070 1440 1100 1300 1108 C1170 1116 1000 1114 1000 1090 Z')), // vũng nước
-  { s: 'a:frog', x: 1180, y: 940, size: 400, flip: true, anim: 'hop', amp: 16 },
-  { s: 'a:gopher_umbrella', x: 600, y: 650, size: 820, anim: 'sway', amp: 5 },
-];
-
-const DINO: SceneLayer[] = [
-  { s: 's:cloud3', x: 1250, y: 160, size: 280, anim: 'drift' },
-  hills([780, 56, 4.1], [1000, 40, 1.1]),
-  { s: 's:chick2', x: 1210, y: 950, size: 360, anim: 'hop', amp: 12, speed: 4 },
-  { s: 's:trex', x: 640, y: 700, size: 760, flip: true, anim: 'breathe', amp: 0.03 },
-];
-
-const SPACE: SceneLayer[] = [
-  (p) => {
-    // chân trời một hành tinh lớn + vài tia lấp lánh
-    p.shape(new Path2D('M-30 1230 L-30 1010 C300 900 1300 900 1630 1010 L1630 1230 Z'));
-    for (const [x, y] of [[180, 220], [1480, 760], [880, 140]] as [number, number][]) p.line(poly([[x - 18, y], [x + 18, y]], false), poly([[x, y - 18], [x, y + 18]], false));
-  },
-  { s: 's:twinkle', x: 300, y: 560, size: 150, rot: 0.2, anim: 'breathe', amp: 0.12, speed: 4 },
-  { s: 's:twinkle', x: 1420, y: 120, size: 130, rot: -0.3, anim: 'breathe', amp: 0.12, speed: 5 },
-  { s: 'a:ufo', x: 1230, y: 400, size: 440, anim: 'drift', amp: 26, speed: 1.6 },
-  { s: 'a:rocket', x: 640, y: 600, size: 860, anim: 'hop', amp: 20, speed: 2.4 },
-];
-
-const OCEAN: SceneLayer[] = [
-  (p) => {
-    // mặt nước gợn phía trên + đáy cát
-    p.line(new Path2D('M-30 120 C200 80 400 160 640 120 C880 80 1080 160 1320 120 C1460 96 1560 110 1630 120'));
-    p.shape(hill(1040, 34, 1.9));
-  },
-  { s: 's:bubble', x: 1000, y: 260, size: 150, anim: 'hop', amp: 16, speed: 1.8 },
-  { s: 'a:narwhal', x: 1220, y: 520, size: 460, anim: 'drift', amp: 22, speed: 1.3 },
-  { s: 'a:octopus', x: 590, y: 660, size: 760, anim: 'breathe', amp: 0.05 },
-];
-
-const FARM: SceneLayer[] = [
-  { s: 's:cloud', x: 1180, y: 160, size: 290, anim: 'drift' },
-  { s: 's:cloud2', x: 300, y: 120, size: 220, anim: 'drift', amp: 16 },
-  hills([740, 48, 5.2], [880, 30, 3.3], [1040, 26, 0.9]),
-  { s: 's:chick', x: 1220, y: 970, size: 330, anim: 'hop', amp: 14, speed: 5 },
-  { s: 'a:cow', x: 620, y: 700, size: 780, flip: true, anim: 'breathe' },
-];
-
-const SWEETS: SceneLayer[] = [
-  { s: 's:cloud3', x: 300, y: 150, size: 260, anim: 'drift' },
-  { s: 's:cloud', x: 1300, y: 190, size: 300, anim: 'drift', amp: -18 },
-  hills([860, 44, 2.2], [1050, 30, 4.4]),
-  { s: 'a:lollipop', x: 1230, y: 720, size: 540, rot: 0.14, anim: 'sway', amp: 8 },
-  { s: 'a:cupcake', x: 620, y: 650, size: 760, anim: 'breathe', amp: 0.025 },
-];
-
-const CITY: SceneLayer[] = [
-  { s: 's:cloud2', x: 340, y: 160, size: 280, anim: 'drift' },
-  (p) => {
-    // đường phố uốn nhẹ + vạch kẻ to
-    p.shape(new Path2D('M-30 860 C400 820 1200 830 1630 870 L1630 1230 L-30 1230 Z'));
-    for (let x = 60; x < 1600; x += 300) p.shape(new Path2D(`M${x} 1070 h170 a17 17 0 0 1 0 34 h-170 a17 17 0 0 1 0 -34 Z`));
-  },
-  { s: 's:helicopter', x: 1240, y: 340, size: 420, anim: 'drift', amp: 20, speed: 1.8 },
-  { s: 's:firetruck', x: 650, y: 790, size: 820, anim: 'hop', amp: 8, speed: 5 },
-];
-
-const FAIRY: SceneLayer[] = [
-  { s: 's:cloud', x: 1330, y: 150, size: 280, anim: 'drift' },
-  hills([780, 52, 3.8], [1000, 38, 0.2]),
-  { s: 's:fairy', x: 1230, y: 430, size: 420, rot: 0.08, anim: 'drift', amp: 16 },
-  { s: 's:unicorn', x: 600, y: 720, size: 780, flip: true, anim: 'breathe' },
-];
-
-const FOREST: SceneLayer[] = [
-  { s: 's:cloud3', x: 1250, y: 170, size: 260, anim: 'drift' },
-  { s: 's:cloud2', x: 380, y: 130, size: 230, anim: 'drift', amp: 14 },
-  hills([760, 60, 2.6], [990, 40, 5.0]),
-  { s: 'a:hedgehog', x: 1220, y: 960, size: 390, anim: 'hop', amp: 10 },
-  { s: 'a:cat', x: 600, y: 680, size: 760, flip: true, anim: 'sway', amp: 6 },
-];
+/**
+ * Dựng một bức tranh từ khung bố cục Codex (LayoutTemplates): mây -> đồi -> chi tiết nền -> bạn đồng hành -> nhân vật chính.
+ * `swap` đổi hình của một loại chi tiết (ví dụ ban đêm: sun -> moon).
+ */
+function fromTemplate(t: Template, main: [string, AnimKind], comp: [string, AnimKind], swap: Partial<Record<Slot, string>> = {}, drop: Slot[] = []): SceneLayer[] {
+  const layers: SceneLayer[] = [];
+  t.clouds.forEach((c, i) => layers.push({ s: i % 2 ? 'g:cloud2' : 'g:cloud1', x: c.x, y: c.y, size: Math.max(250, c.size * 1.6), anim: 'drift', amp: i % 2 ? -18 : 22 }));
+  layers.push((p: Pen) => t.hills.forEach((hl, i) => p.shape(hill(hl.y, hl.amp * 2, hl.tilt / 9 + i * 1.3))));
+  // nền thoáng: tối đa 2 chi tiết nền để vùng tô to và không rối
+  t.props.filter((pr) => !drop.includes(pr.slot) && pr.slot !== 'cloud').slice(0, 2).forEach((pr) => {
+    layers.push({ s: swap[pr.slot] ?? SLOT_STICKER[pr.slot], x: pr.x, y: pr.y, size: Math.max(230, pr.size * 1.9), anim: SLOT_ANIM[pr.slot], rot: pr.slot === 'butterfly' ? 0.2 : 0 });
+  });
+  layers.push({ s: comp[0], x: t.companion.x, y: t.companion.y, size: t.companion.size * 1.05, flip: t.companion.flip, anim: comp[1] });
+  layers.push({ s: main[0], x: t.main.x, y: t.main.y, size: t.main.size, flip: t.main.flip, anim: main[1] });
+  return layers;
+}
+const L = TEMPLATES.landscape;
 
 function scene(id: string, title: string, titleEn: string, layers: SceneLayer[]): Artwork {
   return { id, title, titleEn, builtIn: true, anim: sceneAnim(layers), render: () => composeScene(layers) };
 }
 
 export const BUILT_IN_ARTWORKS: Artwork[] = [
-  scene('s-puppy', 'Cún con và bạn bướm', 'Puppy and Butterfly', PUPPY),
-  scene('s-balloons', 'Chuột chũi và bóng bay', 'Balloon Day', BALLOONS),
-  scene('s-rain', 'Ngày mưa vui vẻ', 'Happy Rainy Day', RAIN),
-  scene('s-dino', 'Khủng long và trứng nở', 'Dino and the Egg', DINO),
-  scene('s-space', 'Du hành vũ trụ', 'Space Trip', SPACE),
-  scene('s-ocean', 'Đại dương kỳ thú', 'Ocean Friends', OCEAN),
-  scene('s-farm', 'Bò sữa và gà con', 'Cow and Chick', FARM),
-  scene('s-sweets', 'Vương quốc bánh ngọt', 'Sweet Kingdom', SWEETS),
-  scene('s-city', 'Xe cứu hoả', 'Fire Truck', CITY),
-  scene('s-fairy', 'Kỳ lân và nàng tiên', 'Unicorn and Fairy', FAIRY),
-  scene('s-forest', 'Mèo và nhím', 'Cat and Hedgehog', FOREST),
+  scene('g-bunny', 'Thỏ con và bọ rùa', 'Bunny and Ladybug', fromTemplate(L[0], ['g:bunny', 'hop'], ['g:ladybug', 'hop'])),
+  scene('g-fox', 'Cáo con và nhím', 'Fox and Hedgehog', fromTemplate(L[1], ['g:fox', 'sway'], ['g:hedgehog', 'breathe'], { star: 'g:flower' })),
+  scene('g-bear', 'Gấu con dưới vườn táo', 'Bear in the Orchard', fromTemplate(L[2], ['g:bear', 'breathe'], ['g:bird', 'hop'])),
+  scene('g-elephant', 'Voi con và bóng bay', 'Elephant and Balloons', fromTemplate(L[3], ['g:elephant', 'breathe'], ['g:duckling', 'hop'])),
+  scene('g-puppy', 'Cún con và ếch xanh', 'Puppy and Frog', fromTemplate(L[4], ['g:puppy', 'breathe'], ['g:frog', 'hop'])),
+  scene('g-panda', 'Gấu trúc và ốc sên', 'Panda and Snail', fromTemplate(L[5], ['g:panda', 'breathe'], ['g:snail', 'sway'])),
+  scene('g-kitten', 'Mèo con và rùa', 'Kitten and Turtle', fromTemplate(L[6], ['g:kitten', 'breathe'], ['g:turtle', 'breathe'])),
+  scene('g-dino', 'Khủng long dưới trăng', 'Dino Under the Moon', fromTemplate(L[7], ['g:dino', 'hop'], ['g:mushroom', 'hop'], { sun: 'g:moon', flower: 'g:star' })),
+  scene('g-astronaut', 'Phi hành gia và vì sao', 'Astronaut and Star', fromTemplate(L[1], ['g:astronaut', 'drift'], ['g:star', 'breathe'], { sun: 'g:moon', star: 'g:star', butterfly: 'g:star', flower: 'g:star' }, ['tree'])),
+  scene('g-duck', 'Vịt con ngày nắng', 'Sunny Duckling', fromTemplate(TEMPLATES.landscape[2], ['g:duckling', 'hop'], ['g:ladybug', 'hop'], { tree: 'g:flower' })),
+  scene('g-hedgehog', 'Nhím con và nấm', 'Hedgehog and Mushroom', fromTemplate(TEMPLATES.landscape[5], ['g:hedgehog', 'breathe'], ['g:mushroom', 'hop'])),
 ];
 
 /** Chuyển động mặc định cho tranh phụ huynh tải lên (không biết trước bố cục). */

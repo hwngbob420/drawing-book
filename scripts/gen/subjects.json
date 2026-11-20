@@ -1,0 +1,40 @@
+{
+  "preamble": "Children's coloring-book sticker art. Pure black outline (#231F20) of thick, perfectly uniform weight on a pure white background. Absolutely NO color fill, no shading, no gray, no hatching, no texture, no shadow, no ground line, no background elements, no text. Every shape fully closed with no gaps. Very few large simple shapes so a 3-year-old can tap each region: big round head, chubby short-limbed body. Big round solid-black eyes with one small white highlight, tiny solid-black nose, soft smile; warm, adorable, friendly. Style: Khan Academy Kids / Duck Duck Moose picture book, rounded organic shapes. Each subject centered in a square image with generous white margin.",
+  "batches": [
+    { "id": "h1", "items": {
+      "fox": "a baby fox sitting and waving one paw, big fluffy tail",
+      "bunny": "a baby bunny sitting, long upright ears with an inner-ear shape, holding a small carrot",
+      "bear": "a bear cub sitting, round ears, a round belly patch, rosy cheek circles",
+      "kitten": "a kitten sitting with tail curled around its feet, pointy ears with inner-ear shapes, no whiskers" } },
+    { "id": "h2", "items": {
+      "puppy": "a puppy sitting, big floppy ears, tongue out, one round spot patch around one eye",
+      "panda": "a panda cub sitting, big oval eye patches, round ears, plump belly",
+      "dino": "a friendly little round dinosaur standing, three big rounded back plates, tiny arms, wide smile",
+      "elephant": "a baby elephant sitting, big round ears, trunk curled upward" } },
+    { "id": "h3", "items": {
+      "astronaut": "a smiling kid astronaut in a big round space helmet with the happy face visible, chunky suit, backpack, waving",
+      "butterfly": "a cute butterfly with a smiling face, two big wings each with two large round patches, two antennae ending in round dots",
+      "bird": "a round chubby little bird sitting, one small wing, three tail feathers, tiny beak",
+      "hedgehog": "a round hedgehog, spikes drawn as a row of big scalloped bumps, little face and pointy snout" } },
+    { "id": "c1", "items": {
+      "duckling": "a round duckling with a small wing, a small beak, big webbed feet",
+      "snail": "a happy snail with one big spiral shell (only 3 spiral bands), smiling face, two eye stalks",
+      "ladybug": "a round ladybug with a smiling face and five large round dots on its back, two antennae",
+      "turtle": "a baby turtle with a domed shell made of five big hexagon patches, smiling" } },
+    { "id": "c2", "items": {
+      "frog": "a baby frog sitting, two big round eye bumps on top of its head, wide smile",
+      "sun": "a smiling sun with a happy face and eight big rounded triangle rays, each ray a closed shape",
+      "cloud1": "a fluffy cloud with a sleepy happy face, three big bumps",
+      "cloud2": "a long flat cloud with four soft bumps, no face" } },
+    { "id": "e1", "items": {
+      "flower": "one big flower, five big round petals, a round center with a smile, a thick stem and two leaves",
+      "tree": "a round fluffy tree with a crown of three big bumps, a thick trunk, three big round apples",
+      "mushroom": "a mushroom with a dome cap with three big round spots, a thick stem with a tiny smiling face",
+      "star": "a chunky five-point star with rounded corners and a smiling face" } },
+    { "id": "e2", "items": {
+      "balloon": "a big round balloon with a small tied knot and a wavy string, one big highlight shape",
+      "rainbow": "a rainbow arch made of four thick bands, a fluffy cloud at each end",
+      "moon": "a crescent moon with a sleepy smiling face and one small star",
+      "house": "a cozy cottage with a big roof, a round window, an arched door and a chimney, chunky simple shapes" } }
+  ]
+}

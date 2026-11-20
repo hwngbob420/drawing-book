@@ -1,21 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Baloo+2:wght@600;800&family=Nunito:wght@600;800&display=swap');
 
-/*
- * Giao diện "Hộp Đồ Chơi" — Claymorphism (học từ clay.css):
- * mỗi khối = bóng đổ mềm bên ngoài + 2 lớp bóng lõm bên trong (tối ở góc dưới
- * phải, sáng ở góc trên trái) tạo cảm giác phồng nổi như đồ chơi silicone.
- */
 :root {
-  --bg1: #fff1cf;
-  --bg2: #ffdcea;
-  --ink: #4a3566;
-  --accent: #ff8a3d;
+  /* Giao diện "Sticker Sách Tranh": viền mực #231F20 như nét vẽ, bóng đổ cứng lệch xuống, màu phấn ấm */
+  --bg1: #fff6e4;
+  --bg2: #ffe9d6;
+  --ink: #231f20;
+  --accent: #ff7a59;
   --btn: 60px; /* mọi nút >= 56px */
   --gap: 12px; /* vùng đệm an toàn giữa các nút */
-  --clay-out: 0 8px 16px rgba(92, 62, 130, 0.24);
-  --clay-in-dark: inset -6px -7px 12px rgba(92, 62, 130, 0.2);
-  --clay-in-light: inset 6px 6px 12px rgba(255, 255, 255, 0.95);
-  font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --clay-out: 0 0 0 3px #231f20, 0 7px 0 3px #231f20;
+  --clay-in-dark: inset 0 -6px 0 rgba(35, 31, 32, 0.1);
+  --clay-in-light: inset 0 5px 0 rgba(255, 255, 255, 0.75);
+  font-family: 'Fredoka', 'Nunito', 'Segoe UI', system-ui, sans-serif;
   color: var(--ink);
 }
 * {
@@ -32,7 +28,12 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  background: linear-gradient(160deg, var(--bg1), var(--bg2));
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 196, 150, 0.45) 0 140px, transparent 141px),
+    radial-gradient(circle at 88% 82%, rgba(160, 222, 205, 0.5) 0 170px, transparent 171px),
+    radial-gradient(circle at 80% 12%, rgba(255, 224, 140, 0.55) 0 90px, transparent 91px),
+    radial-gradient(rgba(35, 31, 32, 0.07) 1.6px, transparent 1.7px) 0 0 / 26px 26px,
+    linear-gradient(160deg, var(--bg1), var(--bg2));
 }
 #app {
   position: fixed;
@@ -56,7 +57,7 @@ button {
 /* ---------- Đất nặn ---------- */
 .clay {
   background: var(--clay, #ffffff);
-  border-radius: 32px;
+  border-radius: 26px;
   box-shadow: var(--clay-out), var(--clay-in-dark), var(--clay-in-light);
 }
 .ibtn {
@@ -76,7 +77,8 @@ button {
   border-radius: 50%;
 }
 .ibtn:active {
-  box-shadow: 0 2px 4px rgba(92, 62, 130, 0.25), inset -3px -3px 8px rgba(92, 62, 130, 0.16), inset 5px 6px 12px rgba(92, 62, 130, 0.22);
+  transform: translateY(5px);
+  box-shadow: 0 0 0 3px #231f20, 0 2px 0 3px #231f20, inset 0 3px 0 rgba(35, 31, 32, 0.16);
 }
 .ibtn:disabled {
   opacity: 0.4;
@@ -89,19 +91,19 @@ button {
   pointer-events: none;
 }
 .c-yellow {
-  --clay: #ffe58a;
+  --clay: #ffd66b;
 }
 .c-pink {
-  --clay: #ffc2de;
+  --clay: #ffb8c6;
 }
 .c-blue {
-  --clay: #bfe6ff;
+  --clay: #a9dcf2;
 }
 .c-green {
-  --clay: #c9f2b8;
+  --clay: #b9e7b0;
 }
 .c-red {
-  --clay: #ffc9c2;
+  --clay: #ffb5a3;
 }
 .ibtn.off {
   --clay: #e4deea;
@@ -111,7 +113,7 @@ button {
 }
 .ibtn.on {
   --clay: #ffd84a;
-  box-shadow: 0 0 0 4px #fff, 0 0 0 8px var(--ink), var(--clay-in-dark), var(--clay-in-light);
+  box-shadow: 0 0 0 3px #231f20, 0 0 0 8px #fff, 0 0 0 11px #231f20, var(--clay-in-dark), var(--clay-in-light);
 }
 
 /* ---------- Gallery ---------- */
@@ -142,7 +144,7 @@ button {
 }
 .logo h1 {
   margin: 0;
-  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-family: 'Fredoka', 'Fredoka', 'Baloo 2', sans-serif;
   font-weight: 800;
   font-size: clamp(22px, 5vw, 40px);
   line-height: 1.05;
@@ -193,7 +195,7 @@ button {
   border-radius: 24px;
   background: #fdfbf7;
   overflow: hidden;
-  box-shadow: inset 0 3px 8px rgba(92, 62, 130, 0.22);
+  box-shadow: inset 0 3px 8px rgba(35, 31, 32, 0.22);
 }
 .thumb img:not(.ico) {
   width: 100%;
@@ -215,14 +217,14 @@ button {
   place-items: center;
   background: #fff;
   border-radius: 50%;
-  box-shadow: 0 4px 8px rgba(92, 62, 130, 0.3), var(--clay-in-dark);
+  box-shadow: 0 4px 8px rgba(35, 31, 32, 0.3), var(--clay-in-dark);
 }
 .badge.wip {
   width: 42px;
   height: 42px;
 }
 .name {
-  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-family: 'Fredoka', 'Fredoka', 'Baloo 2', sans-serif;
   font-weight: 800;
   font-size: 18px;
   line-height: 1.15;
@@ -251,7 +253,7 @@ button {
 .panel h2,
 .panel h3 {
   margin: 0;
-  font-family: 'Baloo 2', sans-serif;
+  font-family: 'Fredoka', 'Baloo 2', sans-serif;
 }
 .panel h3 {
   margin-top: 6px;
@@ -464,7 +466,7 @@ button {
   padding: 5px;
   border-radius: 50%;
   background: conic-gradient(#ff8a3d calc(var(--p, 0) * 360deg), rgba(255, 255, 255, 0.9) 0);
-  box-shadow: 0 4px 10px rgba(92, 62, 130, 0.2);
+  box-shadow: 0 4px 10px rgba(35, 31, 32, 0.2);
   transition: transform 0.3s;
 }
 .ring.done {
@@ -714,7 +716,7 @@ div.pop:not(:has(.pop-row)) {
   height: 18px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.8);
-  box-shadow: inset 0 2px 4px rgba(92, 62, 130, 0.3);
+  box-shadow: inset 0 2px 4px rgba(35, 31, 32, 0.3);
   transition: 0.25s;
 }
 .steps i.done {
@@ -769,7 +771,7 @@ div.pop:not(:has(.pop-row)) {
   position: relative;
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.65);
-  box-shadow: inset 0 3px 8px rgba(92, 62, 130, 0.2);
+  box-shadow: inset 0 3px 8px rgba(35, 31, 32, 0.2);
   pointer-events: none;
 }
 .b-art img {
@@ -815,7 +817,7 @@ div.pop:not(:has(.pop-row)) {
   height: 30%;
 }
 .b-label {
-  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-family: 'Fredoka', 'Fredoka', 'Baloo 2', sans-serif;
   font-weight: 800;
   font-size: clamp(16px, 2.6vw, 24px);
   line-height: 1.1;
@@ -826,7 +828,7 @@ div.pop:not(:has(.pop-row)) {
   margin: auto;
   background: #fdfbf7;
   border-radius: 14px;
-  box-shadow: 0 6px 14px rgba(92, 62, 130, 0.3), 0 0 0 3px rgba(74, 53, 102, 0.8);
+  box-shadow: 0 6px 14px rgba(35, 31, 32, 0.3), 0 0 0 3px rgba(74, 53, 102, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -887,7 +889,7 @@ div.pop:not(:has(.pop-row)) {
   border-radius: 22px;
   overflow: hidden;
   background: #fdfbf7;
-  box-shadow: 0 10px 24px rgba(92, 62, 130, 0.28), 0 0 0 6px #fff;
+  box-shadow: 0 10px 24px rgba(35, 31, 32, 0.28), 0 0 0 6px #fff;
   transition: opacity 0.2s;
 }
 .b-preview.p {
@@ -919,7 +921,7 @@ div.pop:not(:has(.pop-row)) {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Baloo 2', 'Nunito', sans-serif;
+  font-family: 'Fredoka', 'Fredoka', 'Baloo 2', sans-serif;
   font-weight: 800;
   font-size: 28px;
   color: #1f5a1a;
@@ -1083,4 +1085,15 @@ div.pop:not(:has(.pop-row)) {
   position: absolute;
   top: 14px;
   right: 14px;
+}
+
+/* ---------- Hình PNG nét mực (nguồn 'g:') ---------- */
+.gimg {
+  mix-blend-mode: multiply;
+}
+.logo-mascot {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  transform: rotate(-6deg);
 }
